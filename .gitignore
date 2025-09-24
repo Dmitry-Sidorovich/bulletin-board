@@ -1,0 +1,43 @@
+# Rider / IntelliJ
+.idea/
+*.iml
+
+# VS / build
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# dotnet build
+bin/
+obj/
+out/
+Generated/
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Coverage / analyzer
+TestResults/
+coverage/
+*.coverage
+*.coveragexml
+*.lcov
+
+# EF Core tools
+**/Migrations/**/obj/
+*.db
+
+# Secrets
+secrets.json
+*.pfx
+
+# Publish artifacts
+publish/
+dist/

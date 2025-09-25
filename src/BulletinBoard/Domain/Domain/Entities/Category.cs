@@ -21,18 +21,6 @@ public class Category : EntityBase
     /// </summary>
     public Guid? ParentId { get; private set; }
     
-    /// <summary>
-    /// Родительская категория.
-    /// </summary>
-    public Category? Parent { get; private set; }
-    
-    private readonly List<Category> _children = new();
-    
-    /// <summary>
-    /// Дочерние категории.
-    /// </summary>
-    public IReadOnlyList<Category> Children => _children;
-    
     /// <summary> Пустой конструктор, используемый EF Core при материализации из БД.</summary>
     private Category() {}
     
@@ -48,13 +36,13 @@ public class Category : EntityBase
             throw new ArgumentException("Название категории обязательно.", nameof(name));
         }
 
-        var normalized = name.Trim();
-        if (normalized.Length > MaxNameLength)
+        var normalizedName = name.Trim();
+        if (normalizedName.Length > MaxNameLength)
         {
             throw new ArgumentException($"Название категории не может превышать {MaxNameLength} символов.", nameof(name));
         }
 
-        Name = normalized;
+        Name = normalizedName;
         ParentId = parentId;
     }
 }

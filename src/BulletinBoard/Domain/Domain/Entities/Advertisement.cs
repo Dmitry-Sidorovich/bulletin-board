@@ -30,16 +30,8 @@ public class Advertisement : EntityBase
     /// </summary>
     public Guid CategoryId { get; private set; }
     
-    /// <summary>
-    /// Категория. EF Core подгружает при необходимости.
-    /// </summary>
-    public Category? Category { get; private set; }
-    
     /// <summary> Автор объявления (пользователь, FK).</summary>
-    public Guid SellerId { get; private set; }
-
-    /// <summary> Автор объявления.</summary>
-    public User? Seller { get; private set; }
+    public Guid AuthorId { get; private set; }
     
     /// <summary> Контактные данные для этого объявления.</summary>
     public Contact Contact { get; private set; } = default!;
@@ -58,7 +50,7 @@ public class Advertisement : EntityBase
     /// <param name="title"> Заголовок (обязателен, Trim).</param>
     /// <param name="description"> Описание (может быть пустым, Trim).</param>
     /// <param name="categoryId"> Категория (обязательна, не может быть Guid.Empty).</param>
-    /// <param name="sellerId"> Автор/владелец (обязателен, не Guid.Empty).</param>
+    /// <param name="authorId"> Автор/владелец (обязателен, не Guid.Empty).</param>
     /// <param name="contact"> Контактный «снимок» (обязателен).</param>
     /// <param name="status"> Начальный статус (по умолчанию Draft).</param>
     /// <exception cref="ArgumentException"> Если обязательные параметры равны null или нарушены инварианты.</exception>
@@ -66,7 +58,7 @@ public class Advertisement : EntityBase
         string title,
         string? description,
         Guid categoryId,
-        Guid sellerId,
+        Guid authorId,
         Contact contact,
         AdStatus status = AdStatus.Draft)
     {
@@ -83,22 +75,23 @@ public class Advertisement : EntityBase
         {
             throw new ArgumentException("Категория обязательна.", nameof(categoryId));
         }
-        if (sellerId == Guid.Empty)
+        if (authorId == Guid.Empty)
         {
-            throw new ArgumentException("Продавец обязателен.", nameof(sellerId));
+            throw new ArgumentException("Продавец обязателен.", nameof(authorId));
         }
         
         Contact = contact ?? throw new ArgumentNullException(nameof(contact));
         Title = title.Trim();
         
-        Description = (description ?? string.Empty).Trim();
-        if (Description.Length > MaxDescriptionLength)
+        var normalizedDescription = (description ?? string.Empty).Trim();
+        if (normalizedDescription.Length > MaxDescriptionLength)
         {
             throw new ArgumentException($"Описание не может превышать {MaxDescriptionLength} символов.", nameof(description));
         }
         
+        Description = normalizedDescription;
         CategoryId = categoryId;
-        SellerId = sellerId;
+        AuthorId = authorId;
         Status = status;
     }
     
@@ -120,11 +113,13 @@ public class Advertisement : EntityBase
         }
 
         Title = newTitle.Trim();
-        Description = (newDescription ?? string.Empty).Trim();
-        if (Description.Length > MaxDescriptionLength)
+        var normalizedDescription = (newDescription ?? string.Empty).Trim();
+        if (normalizedDescription.Length > MaxDescriptionLength)
         {
             throw new ArgumentException($"Описание не может превышать {MaxDescriptionLength} символов.", nameof(newDescription));
         }
+
+        Description = normalizedDescription;
     }
     
     /// <summary>
@@ -140,7 +135,6 @@ public class Advertisement : EntityBase
         }
 
         CategoryId = newCategoryId;
-        Category = null;
     }
 
     /// <summary>

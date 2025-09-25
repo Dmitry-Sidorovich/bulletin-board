@@ -7,6 +7,11 @@ namespace BulletinBoard.Domain.Entities;
 /// </summary>
 public class Category : EntityBase
 {
+    /// <summary>
+    /// Максимальная длина имени категории.
+    /// </summary>
+    private const int MaxNameLength = 100;
+    
     /// <summary> Название категории.</summary>
     public string Name { get; private set; } = string.Empty;
     
@@ -38,7 +43,18 @@ public class Category : EntityBase
     /// <param name="parentId">Идентификатор родителя (null для корня).</param>
     public Category(string name, Guid? parentId = null)
     {
-        Name = name;
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            throw new ArgumentException("Название категории обязательно.", nameof(name));
+        }
+
+        var normalized = name.Trim();
+        if (normalized.Length > MaxNameLength)
+        {
+            throw new ArgumentException($"Название категории не может превышать {MaxNameLength} символов.", nameof(name));
+        }
+
+        Name = normalized;
         ParentId = parentId;
     }
 }

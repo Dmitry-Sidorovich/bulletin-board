@@ -11,7 +11,7 @@ public enum AdStatus
     /// <summary> Опубликовано и видно в поиске.</summary>
     Published = 1,
     
-    /// <summary> Снято с публикации владельцем (архив).</summary>
+    /// <summary> Снято с публикации (архив).</summary>
     Archived = 2,
     
     /// <summary> Заблокировано админом.</summary>

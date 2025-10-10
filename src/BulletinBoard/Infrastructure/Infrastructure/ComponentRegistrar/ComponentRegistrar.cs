@@ -1,47 +1,56 @@
-﻿using BulletinBoard.Application.Contexts.Advertisements;
+﻿using BulletinBoard.Application.Abstractions;
+using BulletinBoard.Application.Contexts.Advertisements;
 using BulletinBoard.Application.Contexts.Categories;
 using BulletinBoard.Application.Contexts.Users;
 using BulletinBoard.Infrastructure.Contexts.Advertisements;
 using BulletinBoard.Infrastructure.Contexts.Categories;
+using BulletinBoard.Infrastructure.Contexts.Categories.Repositories;
 using BulletinBoard.Infrastructure.Contexts.Users.Repositories;
+using BulletinBoard.Infrastructure.DataAccess;
+using BulletinBoard.Infrastructure.DataAccess.Db;
+using BulletinBoard.Infrastructure.Mapping.Profiles;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BulletinBoard.Infrastructure.ComponentRegistrar;
 
 /// <summary>
-/// Расширения для регистрации зависимостей проекта.
+/// Точка регистрации инфраструктуры: DbContext, AutoMapper, репозитории.
+/// Реализации привязываются к абстракциям из Application.
 /// </summary>
 public static class ComponentRegistrar
 {
     /// <summary>
-    /// Регистрирует прикладные сервисы (Application).
+    /// Регистрирует инфраструктуру (EF Core, профили маппинга и репозитории).
     /// </summary>
-    public static IServiceCollection RegisterAppServices(this IServiceCollection services)
+    /// <param name="services">Контейнер зависимостей.</param>
+    /// <param name="configuration">Конфигурация (источник строки подключения и др.).</param>
+    /// <returns>Тот же контейнер для чейнинга.</returns>
+    /// <exception cref="InvalidOperationException">
+    /// Выбрасывается, если отсутствует строка подключения <c>ConnectionStrings:MainDb</c>.
+    /// </exception>
+    public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        // Сервисы (единые: чтение + команды)
-        services.AddScoped<IAdvertisementService, AdvertisementService>();
-        services.AddScoped<ICategoryService, CategoryService>();
-        services.AddScoped<IUserService, UserService>();
+        var cs = configuration.GetConnectionString("MainDb")
+                 ?? throw new InvalidOperationException("ConnectionStrings:MainDb is not configured.");
 
-        return services;
-    }
+        services.AddDbContext<BulletinBoardDbContext>(opt => opt.UseNpgsql(cs));
 
-    /// <summary>
-    /// Регистрирует репозитории (write/read) — только интерфейсы и заглушки-реализации.
-    /// </summary>
-    public static IServiceCollection RegisterRepositories(this IServiceCollection services)
-    {
-        // Advertisements
-        services.AddScoped<IAdvertisementRepository, AdvertisementRepository>();
+        // Профили AutoMapper из сборки Infrastructure (Mapping/Profiles/*).
+        services.AddAutoMapper(typeof(AdvertisementProfile).Assembly);
+
+        // Read-репозитории (DTO/ProjectTo)
         services.AddScoped<IAdvertisementReadRepository, AdvertisementReadRepository>();
-
-        // Categories
-        services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<ICategoryReadRepository, CategoryReadRepository>();
-
-        // Users
-        services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IUserReadRepository, UserReadRepository>();
+
+        // Write-репозитории (домен)
+        services.AddScoped<IAdvertisementRepository, AdvertisementRepository>();
+        services.AddScoped<ICategoryRepository, CategoryRepository>();
+        services.AddScoped<IUserRepository, UserRepository>();
+        
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         return services;
     }

@@ -1,4 +1,5 @@
-﻿using BulletinBoard.Contracts.Users;
+﻿using BulletinBoard.Contracts.Common;
+using BulletinBoard.Contracts.Users;
 
 namespace BulletinBoard.Application.Contexts.Users;
 
@@ -14,4 +15,18 @@ public interface IUserReadRepository
     /// <param name="cancellationToken">Токен отмены операции.</param>
     /// <returns><see cref="UserDto"/> или <c>null</c>, если не найден.</returns>
     Task<UserDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Возвращает список пользователей постранично.
+    /// </summary>
+    /// <param name="page">Параметры пагинации (номер страницы и размер).</param>
+    /// <param name="cancellationToken">Токен отмены операции.</param>
+    /// <returns>
+    /// Пагинированный результат, содержащий элементы текущей страницы, общее количество,
+    /// номер страницы и размер страницы.
+    /// </returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// Если <paramref name="page"/> содержит некорректные значения (Page &lt; 1 или PageSize &lt;= 0).
+    /// </exception>
+    Task<PagedResult<UserDto>> GetPageAsync(PageRequest page, CancellationToken cancellationToken = default);
 }

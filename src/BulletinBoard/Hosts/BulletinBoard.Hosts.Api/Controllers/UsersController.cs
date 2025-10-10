@@ -1,4 +1,5 @@
 ﻿using BulletinBoard.Application.Contexts.Users;
+using BulletinBoard.Contracts.Common;
 using BulletinBoard.Contracts.Users;
 using Microsoft.AspNetCore.Mvc;
 
@@ -69,5 +70,31 @@ public sealed class UsersController : ControllerBase
         if (!ModelState.IsValid) return ValidationProblem(ModelState);
         var updated = await _service.UpdateAsync(id, request, cancellationToken);
         return updated is null ? NotFound() : Ok(updated);
+    }
+    
+    /// <summary>
+    /// Возвращает список пользователей постранично.
+    /// </summary>
+    /// <param name="page">Номер страницы (по умолчанию 1).</param>
+    /// <param name="pageSize">Размер страницы (по умолчанию 10).</param>
+    /// <param name="cancellationToken">Токен отмены.</param>
+    /// <returns>Пагинированный список пользователей.</returns>
+    [HttpGet]
+    [ProducesResponseType(typeof(PagedResult<UserDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<PagedResult<UserDto>>> GetPage(
+        [FromQuery] int page = 1, 
+        [FromQuery] int pageSize = 10, 
+        CancellationToken cancellationToken = default)
+    {
+        if (page < 1 || pageSize <= 0)
+        {
+            return BadRequest("Invalid pagination parameters.");
+        }
+
+        var request = new PageRequest { Page = page, PageSize = pageSize };
+        var result = await _service.GetPageAsync(request, cancellationToken);
+    
+        return Ok(result);
     }
 }

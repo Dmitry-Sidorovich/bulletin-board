@@ -1,9 +1,10 @@
+using BulletinBoard.Application.ComponentRegistrar;
 using BulletinBoard.Infrastructure.ComponentRegistrar;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.RegisterAppServices()
-                .RegisterRepositories();
+builder.Services.AddApplication()
+                .AddInfrastructure(builder.Configuration);
 
 // Controllers
 builder.Services.AddControllers();

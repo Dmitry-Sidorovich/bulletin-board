@@ -1,9 +1,11 @@
-﻿namespace BulletinBoard.Domain.Entities;
+﻿using BulletinBoard.Domain.Base;
+
+namespace BulletinBoard.Domain.Entities;
 
 /// <summary>
 /// Пользователь (продавец/автор объявлений).
 /// </summary>
-public class User
+public class User : EntityBase
 {
     /// <summary> Отображаемое имя пользователя.</summary>
     public string DisplayName { get; private set; } = string.Empty;

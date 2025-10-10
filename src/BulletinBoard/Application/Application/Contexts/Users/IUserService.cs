@@ -29,7 +29,6 @@ public interface IUserService
     /// Если <paramref name="page"/> содержит некорректные значения (Page &lt; 1 или PageSize &lt;= 0).
     /// </exception>
     Task<PagedResult<UserDto>> GetPageAsync(
-        string? nameFilter,
         PageRequest page,
         CancellationToken cancellationToken = default);
     

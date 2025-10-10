@@ -1,0 +1,31 @@
+﻿services:
+  postgres:
+    image: postgres:17
+    container_name: bulletinboard_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: bulletin_board
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"                 # смените слева на 5433, если 5432 занят на хосте
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - bulletinboard-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d bulletin_board" ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  bulletinboard-network:
+    
+    
+    
+

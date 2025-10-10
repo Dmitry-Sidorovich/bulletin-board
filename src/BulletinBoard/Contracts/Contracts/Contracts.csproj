@@ -7,9 +7,4 @@
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <RootNamespace>BulletinBoard.Contacts</RootNamespace>
     </PropertyGroup>
-
-    <ItemGroup>
-      <ProjectReference Include="..\..\Domain\Domain\Domain.csproj" />
-    </ItemGroup>
-
 </Project>

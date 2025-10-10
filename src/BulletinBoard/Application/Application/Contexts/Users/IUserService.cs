@@ -21,7 +21,6 @@ public interface IUserService
     /// <summary>
     /// Возвращает пользователей с постраничным выводом.
     /// </summary>
-    /// <param name="nameFilter">Опциональный фильтр по имени (начало/вхождение, без учёта регистра — по решению реализации).</param>
     /// <param name="page">Параметры пагинации (номер страницы и размер).</param>
     /// <param name="cancellationToken">Токен отмены операции.</param>
     /// <returns>Пагинированный результат пользователей.</returns>

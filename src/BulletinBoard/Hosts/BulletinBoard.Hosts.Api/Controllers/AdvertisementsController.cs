@@ -125,4 +125,46 @@ public sealed class AdvertisementsController : ControllerBase
         var ok = await _service.DeleteAsync(id, cancellationToken);
         return ok ? NoContent() : NotFound();
     }
+    
+    /// <summary>
+    /// Прикрепить файл к объявлению.
+    /// </summary>
+    /// <param name="id">Идентификатор объявления.</param>
+    /// <param name="fileId">Идентификатор файла (из query string).</param>
+    /// <param name="cancellationToken">Токен отмены операции.</param>
+    /// <returns>204 No Content при успехе.</returns>
+    /// <response code="204">Файл успешно прикреплен к объявлению.</response>
+    /// <response code="404">Объявление или файл не найдены.</response>
+    [HttpPost("{id:guid}/attach-file")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> AttachFile(
+        Guid id,
+        [FromQuery] Guid fileId,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await _service.AttachFileAsync(id, fileId, cancellationToken);
+        return result ? NoContent() : NotFound("Объявление или файл не найдены.");
+    }
+
+    /// <summary>
+    /// Открепить файл от объявления.
+    /// </summary>
+    /// <param name="id">Идентификатор объявления.</param>
+    /// <param name="fileId">Идентификатор файла (из query string).</param>
+    /// <param name="cancellationToken">Токен отмены операции.</param>
+    /// <returns>204 No Content при успехе.</returns>
+    /// <response code="204">Файл успешно откреплен от объявления.</response>
+    /// <response code="404">Привязка файла к объявлению не найдена.</response>
+    [HttpDelete("{id:guid}/detach-file")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DetachFile(
+        Guid id,
+        [FromQuery] Guid fileId,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await _service.DetachFileAsync(id, fileId, cancellationToken);
+        return result ? NoContent() : NotFound("Привязка не найдена.");
+    }
 }

@@ -63,4 +63,28 @@ public interface IAdvertisementService
     /// <param name="cancellationToken">Токен отмены операции.</param>
     /// <returns><c>true</c>, если удалено; иначе <c>false</c>.</returns>
     Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Прикрепить файл к объявлению.
+    /// </summary>
+    /// <param name="advertisementId">Идентификатор объявления.</param>
+    /// <param name="fileId">Идентификатор файла.</param>
+    /// <param name="cancellationToken">Токен отмены операции.</param>
+    /// <returns>
+    /// True, если файл успешно прикреплен; 
+    /// False, если объявление или файл не найдены.
+    /// </returns>
+    Task<bool> AttachFileAsync(Guid advertisementId, Guid fileId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Открепить файл от объявления.
+    /// </summary>
+    /// <param name="advertisementId">Идентификатор объявления.</param>
+    /// <param name="fileId">Идентификатор файла.</param>
+    /// <param name="cancellationToken">Токен отмены операции.</param>
+    /// <returns>
+    /// True, если файл успешно откреплен; 
+    /// False, если привязка не найдена.
+    /// </returns>
+    Task<bool> DetachFileAsync(Guid advertisementId, Guid fileId, CancellationToken cancellationToken = default);
 }

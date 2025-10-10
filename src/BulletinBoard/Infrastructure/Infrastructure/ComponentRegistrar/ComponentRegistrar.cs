@@ -49,6 +49,7 @@ public static class ComponentRegistrar
         services.AddScoped<IUserReadRepository, UserReadRepository>();
         services.AddScoped<IFileRepository, FileRepository>();
         services.AddScoped<IFileStorageService, LocalFileStorageService>();
+        services.AddScoped<IAdvertisementFileRepository, AdvertisementFileRepository>();
 
         // Write-репозитории (домен)
         services.AddScoped<IAdvertisementRepository, AdvertisementRepository>();

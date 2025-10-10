@@ -1,4 +1,6 @@
-﻿namespace BulletinBoard.Contracts.Advertisements;
+﻿using BulletinBoard.Contracts.Files;
+
+namespace BulletinBoard.Contracts.Advertisements;
 
 /// <summary> Объявление (DTO для чтения).</summary>
 public sealed class AdvertisementDto
@@ -26,4 +28,7 @@ public sealed class AdvertisementDto
 
     /// <summary> Время создания (UTC).</summary>
     public DateTimeOffset CreatedAt { get; init; }
+    
+    /// <summary>Прикрепленные файлы.</summary>
+    public IReadOnlyList<FileInfoDto> Files { get; set; } = Array.Empty<FileInfoDto>();
 }

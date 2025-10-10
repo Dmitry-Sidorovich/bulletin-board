@@ -9,6 +9,10 @@ namespace BulletinBoard.Infrastructure.DataAccess.Configurations;
 /// </summary>
 public sealed class FileConfiguration : IEntityTypeConfiguration<File>
 {
+    /// <summary>
+    /// Настраивает маппинг сущности File на таблицу БД.
+    /// </summary>
+    /// <param name="builder">Построитель конфигурации для сущности File.</param>
     public void Configure(EntityTypeBuilder<File> builder)
     {
         builder.ToTable("files");

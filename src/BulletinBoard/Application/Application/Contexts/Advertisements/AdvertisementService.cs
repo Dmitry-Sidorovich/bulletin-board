@@ -13,6 +13,7 @@ public sealed class AdvertisementService : IAdvertisementService
 {
     private readonly IAdvertisementRepository _advertisementRepository;
     private readonly IAdvertisementReadRepository _advertisementReadRepository;
+    private readonly IAdvertisementFileRepository _advertisementFileRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     
@@ -21,16 +22,19 @@ public sealed class AdvertisementService : IAdvertisementService
     /// </summary>
     /// <param name="advertisementRepository">Репозиторий для записи объявлений.</param>
     /// <param name="advertisementReadRepository">Репозиторий для чтения объявлений.</param>
+    /// <param name="advertisementFileRepository">Репозиторий для работы с файлами.</param>
     /// <param name="unitOfWork">Unit of Work для управления транзакциями.</param>
     /// <param name="mapper">Маппер для преобразования между Domain и DTO.</param>
     public AdvertisementService(
         IAdvertisementRepository advertisementRepository,
         IAdvertisementReadRepository advertisementReadRepository,
+        IAdvertisementFileRepository advertisementFileRepository,
         IUnitOfWork unitOfWork,
         IMapper mapper)
     {
         _advertisementRepository = advertisementRepository;
         _advertisementReadRepository = advertisementReadRepository;
+        _advertisementFileRepository = advertisementFileRepository;
         _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
@@ -173,5 +177,32 @@ public sealed class AdvertisementService : IAdvertisementService
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return true;
+    }
+    
+    /// <inheritdoc />
+    public async Task<bool> AttachFileAsync(Guid advertisementId, Guid fileId, CancellationToken cancellationToken = default)
+    {
+        var adExists = await _advertisementFileRepository.AdvertisementExistsAsync(advertisementId, cancellationToken);
+        if (!adExists) return false;
+
+        var fileExists = await _advertisementFileRepository.FileExistsAsync(fileId, cancellationToken);
+        if (!fileExists) return false;
+
+        var alreadyAttached = await _advertisementFileRepository.IsFileAttachedAsync(advertisementId, fileId, cancellationToken);
+        if (alreadyAttached) return true;
+
+        var maxOrder = await _advertisementFileRepository.GetMaxOrderAsync(advertisementId, cancellationToken);
+
+        var advertisementFile = new AdvertisementFile(advertisementId, fileId, maxOrder + 1);
+        await _advertisementFileRepository.AddAsync(advertisementFile, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return true;
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> DetachFileAsync(Guid advertisementId, Guid fileId, CancellationToken cancellationToken = default)
+    {
+        return await _advertisementFileRepository.DeleteAsync(advertisementId, fileId, cancellationToken);
     }
 }

@@ -9,6 +9,10 @@ namespace BulletinBoard.Infrastructure.DataAccess.Configurations;
 /// </summary>
 public sealed class AdvertisementFileConfiguration : IEntityTypeConfiguration<AdvertisementFile>
 {
+    /// <summary>
+    /// Настраивает маппинг сущности AdvertisementFile на таблицу БД.
+    /// </summary>
+    /// <param name="builder">Построитель конфигурации для сущности AdvertisementFile.</param>
     public void Configure(EntityTypeBuilder<AdvertisementFile> builder)
     {
         builder.ToTable("advertisement_files");

@@ -1,5 +1,6 @@
 ﻿using BulletinBoard.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using File = BulletinBoard.Domain.Entities.File;
 
 namespace BulletinBoard.Infrastructure.DataAccess.Db;
 
@@ -14,6 +15,9 @@ public class BulletinBoardDbContext : DbContext
     public DbSet<Advertisement> Advertisements => Set<Advertisement>();
     /// <summary>Набор пользователей (авторов).</summary>
     public DbSet<User> Users => Set<User>();
+    
+    public DbSet<File> Files => Set<File>();
+    public DbSet<AdvertisementFile> AdvertisementFiles => Set<AdvertisementFile>();
 
     /// <summary>
     /// Создаёт экземпляр контекста.

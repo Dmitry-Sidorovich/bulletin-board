@@ -1,13 +1,16 @@
 ﻿using BulletinBoard.Application.Abstractions;
 using BulletinBoard.Application.Contexts.Advertisements;
 using BulletinBoard.Application.Contexts.Categories;
+using BulletinBoard.Application.Contexts.Files.Repositories;
 using BulletinBoard.Application.Contexts.Users;
 using BulletinBoard.Infrastructure.Contexts.Advertisements;
 using BulletinBoard.Infrastructure.Contexts.Categories;
 using BulletinBoard.Infrastructure.Contexts.Categories.Repositories;
+using BulletinBoard.Infrastructure.Contexts.Files.Repositories;
 using BulletinBoard.Infrastructure.Contexts.Users.Repositories;
 using BulletinBoard.Infrastructure.DataAccess;
 using BulletinBoard.Infrastructure.DataAccess.Db;
+using BulletinBoard.Infrastructure.FileStorage;
 using BulletinBoard.Infrastructure.Mapping.Profiles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -44,6 +47,8 @@ public static class ComponentRegistrar
         services.AddScoped<IAdvertisementReadRepository, AdvertisementReadRepository>();
         services.AddScoped<ICategoryReadRepository, CategoryReadRepository>();
         services.AddScoped<IUserReadRepository, UserReadRepository>();
+        services.AddScoped<IFileRepository, FileRepository>();
+        services.AddScoped<IFileStorageService, LocalFileStorageService>();
 
         // Write-репозитории (домен)
         services.AddScoped<IAdvertisementRepository, AdvertisementRepository>();

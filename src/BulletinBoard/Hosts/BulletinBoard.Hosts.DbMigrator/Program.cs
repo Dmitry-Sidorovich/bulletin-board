@@ -1,33 +1,38 @@
-﻿using BulletinBoard.Hosts.DbMigrator;
+﻿using BulletinBoard.Infrastructure.DataAccess.Db;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
 
-try
+Console.WriteLine("=== BulletinBoard Database Migrator ===\n");
+
+// Читаем конфигурацию
+var configuration = new ConfigurationBuilder()
+    .SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile("appsettings.json", optional: false)
+    .AddJsonFile("appsettings.Development.json", optional: true)
+    .Build();
+
+var connectionString = configuration.GetConnectionString("MainDb")
+                       ?? throw new InvalidOperationException("Connection string 'MainDb' not found in appsettings.json");
+
+Console.WriteLine($"Database: {GetDatabaseName(connectionString)}\n");
+
+// Создаем контекст напрямую (БЕЗ Host, БЕЗ DI)
+var optionsBuilder = new DbContextOptionsBuilder<BulletinBoardDbContext>();
+optionsBuilder.UseNpgsql(connectionString);
+
+await using var context = new BulletinBoardDbContext(optionsBuilder.Options);
+
+// Применяем миграции
+Console.WriteLine("Applying migrations...");
+await context.Database.MigrateAsync();
+
+Console.WriteLine("✅ Migrations applied successfully!\n");
+
+return;
+
+static string GetDatabaseName(string connectionString)
 {
-    var builder = Host.CreateApplicationBuilder(args);
-
-    builder.Services.AddMigrationServices(builder.Configuration);
-    builder.Services.AddLogging(x => x.AddSimpleConsole());
-
-    using var app = builder.Build();
-    using var scope = app.Services.CreateScope();
-
-    var db = scope.ServiceProvider.GetRequiredService<MigrationDbContext>();
-
-    var pending = await db.Database.GetPendingMigrationsAsync();
-    Console.WriteLine(pending.Any()
-        ? $"Found {pending.Count()} pending migration(s)."
-        : "No pending migrations. Database is up to date.");
-
-    await db.Database.MigrateAsync();
-    Console.WriteLine("✅ Migrations applied successfully!");
-    return 0;
-}
-catch (Exception ex)
-{
-    Console.Error.WriteLine("❌ Migration failed:");
-    Console.Error.WriteLine(ex.ToString());
-    return 1;
+    var parts = connectionString.Split(';');
+    var dbPart = parts.FirstOrDefault(p => p.Trim().StartsWith("Database=", StringComparison.OrdinalIgnoreCase));
+    return dbPart?.Split('=')[1].Trim() ?? "unknown";
 }

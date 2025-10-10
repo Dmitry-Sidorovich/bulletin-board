@@ -1,6 +1,8 @@
 ﻿using BulletinBoard.Application.Contexts.Advertisements;
 using BulletinBoard.Application.Contexts.Categories;
+using BulletinBoard.Application.Contexts.Files.Services;
 using BulletinBoard.Application.Contexts.Users;
+using BulletinBoard.Infrastructure.Contexts.Files.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BulletinBoard.Application.ComponentRegistrar;
@@ -20,6 +22,7 @@ public static class ComponentRegistrar
         services.AddScoped<IAdvertisementService, AdvertisementService>();
         services.AddScoped<ICategoryService, CategoryService>();
         services.AddScoped<IUserService, UserService>();
+        services.AddScoped<IFileService, FileService>();
         return services;
     }
 }

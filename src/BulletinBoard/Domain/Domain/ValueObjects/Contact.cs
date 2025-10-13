@@ -7,10 +7,10 @@
 public sealed class Contact
 {
     /// <summary> Имя продавца.</summary>
-    public string Name { get; }
+    public string Name { get; } = null!;
     
     /// <summary> Почта продавца (обязательна для объявления).</summary>
-    public string Email { get; }
+    public string Email { get; } = null!;
     
     /// <summary> Телефон продавца (опционально).</summary>
     public string? Phone { get; }

@@ -1,7 +1,11 @@
 using BulletinBoard.Application.ComponentRegistrar;
+using BulletinBoard.Application.Validators.Advertisements;
+using BulletinBoard.Hosts.Api.Validation;
 using BulletinBoard.Infrastructure.ComponentRegistrar;
 using BulletinBoard.Infrastructure.Middlewares;
+using FluentValidation;
 using Serilog;
+using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
@@ -21,6 +25,14 @@ try
     builder.Services.AddApplication()
         .AddInfrastructure(builder.Configuration);
 
+    builder.Services.AddValidatorsFromAssemblyContaining<CreateAdvertisementDtoValidator>();
+    builder.Services.AddFluentValidationAutoValidation(configuration =>
+    {
+        configuration.DisableBuiltInModelValidation = true;
+    
+        configuration.OverrideDefaultResultFactoryWith<CustomValidationResultFactory>();
+    });
+    
     builder.Services.AddControllers();
 
     builder.Services.AddEndpointsApiExplorer();
@@ -35,9 +47,13 @@ try
     
     app.UseMiddleware<ExceptionHandlingMiddleware>();
 
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    if (app.Environment.IsDevelopment())
+    {
+        app.UseSwagger();
+        app.UseSwaggerUI();
+    }
 
+    app.UseHttpsRedirection();
     app.UseStaticFiles();
     app.MapControllers();
 

@@ -10,7 +10,10 @@ public abstract class EntityBase
     
     /// <summary> Дата и время создания (UTC).</summary>
     public DateTimeOffset CreatedAt { get; protected set; }
-
+    
+    /// <summary>
+    /// Защищённый конструктор для инициализации базовых полей сущности.
+    /// </summary>
     protected EntityBase()
     {
         Id = Guid.NewGuid();

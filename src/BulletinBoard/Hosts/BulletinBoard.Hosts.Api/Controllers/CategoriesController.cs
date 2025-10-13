@@ -53,16 +53,15 @@ public sealed class CategoriesController : ControllerBase
     /// <summary>
     /// Создаёт корневую категорию.
     /// </summary>
-    /// <param name="name">Название категории (в query).</param>
+    /// <param name="request">Данные для создания категории.</param>
     /// <param name="cancellationToken">Токен отмены.</param>
     /// <returns>Созданная категория.</returns>
     [HttpPost("root")]
     [ProducesResponseType(typeof(CategoryDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<CategoryDto>> CreateRoot([FromQuery] string name, CancellationToken cancellationToken = default)
+    public async Task<ActionResult<CategoryDto>> CreateRoot([FromBody] CreateCategoryDto request, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(name)) return BadRequest("Name is required.");
-        var created = await _service.CreateRootAsync(name, cancellationToken);
+        var created = await _service.CreateRootAsync(request.Name, cancellationToken);
         return CreatedAtAction(nameof(GetRoots), null, created);
     }
 
@@ -70,17 +69,16 @@ public sealed class CategoriesController : ControllerBase
     /// Создаёт дочернюю категорию.
     /// </summary>
     /// <param name="parentId">Идентификатор родительской категории.</param>
-    /// <param name="name">Название категории (в query).</param>
+    /// <param name="request">Данные для создания категории.</param>
     /// <param name="cancellationToken">Токен отмены.</param>
     /// <returns>Созданная категория.</returns>
     [HttpPost("{parentId:guid}/child")]
     [ProducesResponseType(typeof(CategoryDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<CategoryDto>> CreateChild(Guid parentId, [FromQuery] string name, CancellationToken cancellationToken = default)
+    public async Task<ActionResult<CategoryDto>> CreateChild(Guid parentId, [FromBody] CreateCategoryDto request, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(name)) return BadRequest("Name is required.");
-        var created = await _service.CreateChildAsync(parentId, name, cancellationToken);
+        var created = await _service.CreateChildAsync(parentId, request.Name, cancellationToken);
         // Можно вернуть Created, однако точной GetById нет; вернём 201 без location-лупа:
         return Created(string.Empty, created);
     }

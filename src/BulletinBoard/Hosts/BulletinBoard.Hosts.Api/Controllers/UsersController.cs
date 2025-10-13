@@ -48,7 +48,6 @@ public sealed class UsersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<UserDto>> Create([FromBody] CreateUserDto request, CancellationToken cancellationToken = default)
     {
-        if (!ModelState.IsValid) return ValidationProblem(ModelState);
         var created = await _service.CreateAsync(request, cancellationToken);
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
@@ -68,7 +67,6 @@ public sealed class UsersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<UserDto>> Update(Guid id, [FromBody] UpdateUserDto request, CancellationToken cancellationToken = default)
     {
-        if (!ModelState.IsValid) return ValidationProblem(ModelState);
         var updated = await _service.UpdateAsync(id, request, cancellationToken);
         return updated is null ? NotFound() : Ok(updated);
     }

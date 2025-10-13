@@ -77,6 +77,21 @@ public class ExceptionHandlingMiddleware
                     Detail = notFound.Message,
                     TraceId = context.TraceIdentifier
                 }),
+            
+            FluentValidation.ValidationException fluentValidation => (
+                StatusCodes.Status400BadRequest,
+                new ErrorResponse
+                {
+                    Status = StatusCodes.Status400BadRequest,
+                    Title = "Ошибка валидации",
+                    Detail = "Один или несколько полей содержат некорректные данные.",
+                    TraceId = context.TraceIdentifier,
+                    Errors = fluentValidation.Errors
+                        .GroupBy(e => e.PropertyName)
+                        .ToDictionary(
+                            g => g.Key,
+                            g => g.Select(e => e.ErrorMessage).ToArray())
+                }),
 
             ValidationException validation => (
                 StatusCodes.Status400BadRequest,

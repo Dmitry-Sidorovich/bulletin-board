@@ -68,7 +68,6 @@ public sealed class AdvertisementsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<AdvertisementDto>> Create([FromBody] CreateAdvertisementDto request, CancellationToken cancellationToken = default)
     {
-        if (!ModelState.IsValid) return ValidationProblem(ModelState);
         var created = await _service.CreateAsync(request, cancellationToken);
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
@@ -88,7 +87,6 @@ public sealed class AdvertisementsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<AdvertisementDto>> Update(Guid id, [FromBody] UpdateAdvertisementDto request, CancellationToken cancellationToken = default)
     {
-        if (!ModelState.IsValid) return ValidationProblem(ModelState);
         var updated = await _service.UpdateAsync(id, request, cancellationToken);
         return updated is null ? NotFound() : Ok(updated);
     }
@@ -107,7 +105,6 @@ public sealed class AdvertisementsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ChangeStatus(Guid id, [FromBody] ChangeAdvertisementStatusDto request, CancellationToken cancellationToken = default)
     {
-        if (!ModelState.IsValid) return ValidationProblem(ModelState);
         var ok = await _service.ChangeStatusAsync(id, request, cancellationToken);
         return ok ? NoContent() : NotFound();
     }

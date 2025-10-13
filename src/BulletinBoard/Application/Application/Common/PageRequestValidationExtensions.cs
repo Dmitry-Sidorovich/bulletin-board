@@ -17,16 +17,18 @@ public static class PageRequestValidationExtensions
     /// </exception>
     public static void ThrowIfInvalid(this PageRequest page, int? maxPageSize = null)
     {
+        if (page == null)
+        {
+            throw new ArgumentNullException(nameof(page), "Page cannot be null");
+        }
         if (page.Page < 1)
         {
             throw new ArgumentOutOfRangeException(nameof(page.Page), "Page must be >= 1.");
         }
-
         if (page.PageSize <= 0)
         {
             throw new ArgumentOutOfRangeException(nameof(page.PageSize), "PageSize must be > 0.");
         }
-
         if (maxPageSize.HasValue && page.PageSize > maxPageSize.Value)
         {
             throw new ArgumentOutOfRangeException(nameof(page.PageSize), $"PageSize must be <= {maxPageSize.Value}.");

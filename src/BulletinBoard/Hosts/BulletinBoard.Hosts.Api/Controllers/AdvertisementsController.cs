@@ -1,4 +1,5 @@
-﻿using BulletinBoard.Application.Contexts.Advertisements;
+﻿using BulletinBoard.Application.Common;
+using BulletinBoard.Application.Contexts.Advertisements;
 using BulletinBoard.Contracts.Advertisements;
 using BulletinBoard.Contracts.Common;
 using Microsoft.AspNetCore.Mvc;
@@ -46,10 +47,10 @@ public sealed class AdvertisementsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<PagedResult<AdvertisementDto>>> GetByCategory(
         Guid categoryId,
-        [FromQuery] PageRequest page,
+        [FromQuery(Name = "")] PageRequest page,
         CancellationToken cancellationToken = default)
     {
-        if (page is null || page.Page < 1 || page.PageSize <= 0) return BadRequest("Invalid pagination.");
+        page.ThrowIfInvalid();
         var result = await _service.GetByCategoryAsync(categoryId, page, cancellationToken);
         return Ok(result);
     }

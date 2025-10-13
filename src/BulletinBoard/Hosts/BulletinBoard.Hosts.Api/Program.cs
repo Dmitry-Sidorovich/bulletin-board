@@ -1,30 +1,54 @@
 using BulletinBoard.Application.ComponentRegistrar;
 using BulletinBoard.Infrastructure.ComponentRegistrar;
+using BulletinBoard.Infrastructure.Middlewares;
+using Serilog;
 
-var builder = WebApplication.CreateBuilder(args);
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .CreateBootstrapLogger();
 
-builder.Services.AddApplication()
-                .AddInfrastructure(builder.Configuration);
+Log.Information("Starting BulletinBoard API...");
 
-// Controllers
-builder.Services.AddControllers();
-
-// Swagger + XML docs
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(o =>
+try
 {
-    var xmlFiles = Directory.GetFiles(AppContext.BaseDirectory, "*.xml");
-    foreach (var xml in xmlFiles)
-        o.IncludeXmlComments(xml, includeControllerXmlComments: true);
-});
+    var builder = WebApplication.CreateBuilder(args);
+    
+    builder.Host.UseSerilog((context, services, configuration) => configuration
+        .ReadFrom.Configuration(context.Configuration)
+        .ReadFrom.Services(services)
+        .Enrich.FromLogContext());
 
-var app = builder.Build();
+    builder.Services.AddApplication()
+        .AddInfrastructure(builder.Configuration);
 
-app.UseSwagger();
-app.UseSwaggerUI();
+    builder.Services.AddControllers();
 
-app.UseStaticFiles();
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen(o =>
+    {
+        var xmlFiles = Directory.GetFiles(AppContext.BaseDirectory, "*.xml");
+        foreach (var xml in xmlFiles)
+            o.IncludeXmlComments(xml, includeControllerXmlComments: true);
+    });
 
-app.MapControllers();
+    var app = builder.Build();
+    
+    app.UseMiddleware<ExceptionHandlingMiddleware>();
 
-app.Run();
+    app.UseSwagger();
+    app.UseSwaggerUI();
+
+    app.UseStaticFiles();
+    app.MapControllers();
+
+    Log.Information("BulletinBoard API started successfully");
+    app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Application terminated unexpectedly");
+}
+finally
+{
+    Log.CloseAndFlush();
+}

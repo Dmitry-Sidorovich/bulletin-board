@@ -38,9 +38,10 @@ public sealed class CategoryReadRepository : ICategoryReadRepository
         PageRequest page,
         CancellationToken cancellationToken = default)
     {
-        
         if (page.Page < 1 || page.PageSize <= 0)
+        {
             throw new ArgumentOutOfRangeException(nameof(page), "Invalid pagination parameters.");
+        }
 
         var query = _dbContext.Categories
             .AsNoTracking()

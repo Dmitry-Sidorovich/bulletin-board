@@ -2,7 +2,6 @@
 using BulletinBoard.Application.Contexts.Categories;
 using BulletinBoard.Application.Contexts.Files.Services;
 using BulletinBoard.Application.Contexts.Users;
-using BulletinBoard.Infrastructure.Contexts.Files.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BulletinBoard.Application.ComponentRegistrar;

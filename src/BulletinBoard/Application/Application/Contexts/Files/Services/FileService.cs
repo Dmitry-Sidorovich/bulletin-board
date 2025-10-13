@@ -1,11 +1,11 @@
 ﻿using AutoMapper;
 using BulletinBoard.Application.Abstractions;
 using BulletinBoard.Application.Contexts.Files.Repositories;
-using BulletinBoard.Application.Contexts.Files.Services;
 using BulletinBoard.Contracts.Files;
+using Microsoft.Extensions.Logging; 
 using File = BulletinBoard.Domain.Entities.File;
 
-namespace BulletinBoard.Infrastructure.Contexts.Files.Services;
+namespace BulletinBoard.Application.Contexts.Files.Services;
 
 /// <inheritdoc />
 public sealed class FileService : IFileService
@@ -14,6 +14,7 @@ public sealed class FileService : IFileService
     private readonly IFileStorageService _fileStorageService;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
+    private readonly ILogger<FileService> _logger;
 
     /// <summary>
     /// Инициализирует сервис для работы с файлами.
@@ -22,12 +23,14 @@ public sealed class FileService : IFileService
         IFileRepository fileRepository,
         IFileStorageService fileStorageService,
         IUnitOfWork unitOfWork,
-        IMapper mapper)
+        IMapper mapper,
+        ILogger<FileService> logger)
     {
         _fileRepository = fileRepository;
         _fileStorageService = fileStorageService;
         _unitOfWork = unitOfWork;
         _mapper = mapper;
+        _logger = logger;
     }
 
     /// <inheritdoc />
@@ -38,12 +41,15 @@ public sealed class FileService : IFileService
         long fileSize,
         CancellationToken cancellationToken = default)
     {
+        _logger.LogInformation("Загрузка файла: {FileName}, размер: {FileSize} байт", fileName, fileSize);
+        
         var filePath = await _fileStorageService.SaveFileAsync(stream, fileName, cancellationToken);
-
         var file = new File(fileName, filePath, contentType, fileSize);
 
         await _fileRepository.AddAsync(file, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+        
+        _logger.LogInformation("Файл успешно загружен: {FileId}, путь: {FilePath}", file.Id, filePath);
 
         return new FileUploadResultDto
         {

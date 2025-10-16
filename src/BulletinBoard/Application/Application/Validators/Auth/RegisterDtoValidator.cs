@@ -1,17 +1,17 @@
-﻿using BulletinBoard.Contracts.Users;
+﻿using BulletinBoard.Contracts.Auth;
 using FluentValidation;
 
-namespace BulletinBoard.Application.Validators.Users;
+namespace BulletinBoard.Application.Validators.Auth;
 
 /// <summary>
-/// Валидатор для создания пользователя.
+/// Валидатор для регистрации пользователя.
 /// </summary>
-public class CreateUserDtoValidator : AbstractValidator<CreateUserDto>
+public class RegisterDtoValidator : AbstractValidator<RegisterDto>
 {
     /// <summary>
     /// Инициализирует валидатор с правилами валидации.
     /// </summary>
-    public CreateUserDtoValidator()
+    public RegisterDtoValidator()
     {
         RuleFor(x => x.DisplayName)
             .NotEmpty().WithMessage("Имя обязательно.")
@@ -23,6 +23,14 @@ public class CreateUserDtoValidator : AbstractValidator<CreateUserDto>
             .NotEmpty().WithMessage("Email обязателен.")
             .EmailAddress().WithMessage("Некорректный формат email.")
             .MaximumLength(100).WithMessage("Email слишком длинный.");
+
+        RuleFor(x => x.Password)
+            .NotEmpty().WithMessage("Пароль обязателен.")
+            .MinimumLength(6).WithMessage("Пароль должен содержать минимум 6 символов.")
+            .MaximumLength(100).WithMessage("Пароль слишком длинный.")
+            .Matches(@"[A-Z]").WithMessage("Пароль должен содержать хотя бы одну заглавную букву.")
+            .Matches(@"[a-z]").WithMessage("Пароль должен содержать хотя бы одну строчную букву.")
+            .Matches(@"\d").WithMessage("Пароль должен содержать хотя бы одну цифру.");
 
         RuleFor(x => x.Phone)
             .Matches(@"^\+?\d{10,15}$")

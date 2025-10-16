@@ -28,7 +28,7 @@ public class ErrorResponse
     /// <summary>
     /// Временная метка возникновения ошибки (ISO 8601).
     /// </summary>
-    public DateTime Timestamp { get; init; } = DateTime.UtcNow;
+    public DateTimeOffset Timestamp { get; init; } = DateTime.UtcNow;
 
     /// <summary>
     /// Ошибки валидации (опционально, для ValidationException).

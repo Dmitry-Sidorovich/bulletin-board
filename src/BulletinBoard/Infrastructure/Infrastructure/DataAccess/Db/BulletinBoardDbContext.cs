@@ -23,6 +23,9 @@ public class BulletinBoardDbContext : DbContext
     
     /// <summary>Набор связей между объявлениями и файлами.</summary>
     public DbSet<AdvertisementFile> AdvertisementFiles => Set<AdvertisementFile>();
+    
+    /// <summary>Набор refresh-токенов.</summary>
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
     /// <summary>
     /// Создаёт экземпляр контекста.

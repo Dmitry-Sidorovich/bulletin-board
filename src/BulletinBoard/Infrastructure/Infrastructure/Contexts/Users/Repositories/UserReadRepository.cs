@@ -41,11 +41,9 @@ public sealed class UserReadRepository: IUserReadRepository
         CancellationToken cancellationToken = default)
     {
         var baseQuery = _dbContext.Users.AsNoTracking();
-
-        // COUNT без ORDER BY (быстрее)
+        
         var total = await baseQuery.CountAsync(cancellationToken);
-
-        // Применяем сортировку только для выборки
+        
         var items = await baseQuery
             .OrderBy(u => u.DisplayName)
             .ThenBy(u => u.CreatedAt)
@@ -59,7 +57,7 @@ public sealed class UserReadRepository: IUserReadRepository
             Items = items,
             TotalCount = total,
             Page = page.Page,
-            PageSize = page.PageSize
+            PageSize = page.PageSize,
         };
     }
 }

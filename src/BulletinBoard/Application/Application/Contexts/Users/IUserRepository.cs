@@ -32,4 +32,12 @@ public interface IUserRepository
     /// <param name="cancellationToken">Токен отмены операции.</param>
     /// <exception cref="ArgumentNullException">Если <paramref name="user"/> равен <c>null</c>.</exception>
     Task UpdateAsync(User user, CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Находит пользователя по email.
+    /// </summary>
+    /// <param name="email">Email пользователя.</param>
+    /// <param name="cancellationToken">Токен отмены.</param>
+    /// <returns>Пользователь или null, если не найден.</returns>
+    Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default);
 }

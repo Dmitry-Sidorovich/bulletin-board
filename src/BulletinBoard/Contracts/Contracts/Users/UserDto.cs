@@ -19,4 +19,7 @@ public sealed class UserDto
 
     /// <summary> Время создания (UTC).</summary>
     public DateTimeOffset CreatedAt { get; init; }
+    
+    /// <summary>Роль пользователя (User или Admin).</summary>
+    public string Role { get; init; } = string.Empty;
 }

@@ -5,6 +5,6 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
-        <RootNamespace>BulletinBoard.Contacts</RootNamespace>
+        <RootNamespace>BulletinBoard.Contracts</RootNamespace>
     </PropertyGroup>
 </Project>

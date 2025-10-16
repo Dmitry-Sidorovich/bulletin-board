@@ -1,4 +1,5 @@
 ﻿using BulletinBoard.Domain.Base;
+using BulletinBoard.Domain.Enums;
 
 namespace BulletinBoard.Domain.Entities;
 
@@ -10,19 +11,34 @@ public class User : EntityBase
     /// <summary> Отображаемое имя пользователя.</summary>
     public string DisplayName { get; private set; } = string.Empty;
     
-    /// <summary> Почта (основной контакт).</summary>
+    /// <summary> Почта (основной контакт, используется для входа).</summary>
     public string Email { get; private set; } = string.Empty;
     
     /// <summary> Телефон (необязательный контакт).</summary>
     public string? Phone { get; private set; }
     
+    /// <summary>Хеш пароля (BCrypt).</summary>
+    public string PasswordHash { get; private set; } = string.Empty;
+
+    /// <summary>Роль пользователя (User или Admin).</summary>
+    public UserRole Role { get; private set; }
+
+    /// <summary>Коллекция refresh-токенов пользователя.</summary>
+    public IReadOnlyCollection<RefreshToken> RefreshTokens => _refreshTokens.AsReadOnly();
+    private readonly List<RefreshToken> _refreshTokens = new();
+    
     /// <summary> Пустой конструктор для EF Core.</summary>
     private User() { }
 
     /// <summary>
-    /// Создаёт пользователя (без учётки/авторизации).
+    /// Создаёт нового пользователя с учётными данными.
     /// </summary>
-    public User(string displayName, string email, string? phone = null)
+    /// <param name="displayName">Отображаемое имя.</param>
+    /// <param name="email">Email (для входа).</param>
+    /// <param name="passwordHash">Хеш пароля (BCrypt).</param>
+    /// <param name="phone">Телефон (необязательно).</param>
+    /// <param name="role">Роль (по умолчанию User).</param>
+    public User(string displayName, string email, string passwordHash, string? phone = null, UserRole role = UserRole.User)
     {
         if (string.IsNullOrWhiteSpace(displayName))
         {
@@ -31,12 +47,19 @@ public class User : EntityBase
 
         if (string.IsNullOrWhiteSpace(email))
         {
-            throw new ArgumentException("Почта обязателен.", nameof(email));
+            throw new ArgumentException("Почта обязательна.", nameof(email));
+        }
+
+        if (string.IsNullOrWhiteSpace(passwordHash))
+        {
+            throw new ArgumentException("Хеш пароля обязателен.", nameof(passwordHash));
         }
         
         DisplayName = displayName.Trim();
         Email = email.Trim();
+        PasswordHash = passwordHash;
         Phone = string.IsNullOrWhiteSpace(phone) ? null : phone.Trim();
+        Role = role;
     }
 
     /// <summary>
@@ -75,5 +98,38 @@ public class User : EntityBase
         {
             Phone = string.IsNullOrWhiteSpace(phone) ? null : phone.Trim();
         }
+    }
+    
+    /// <summary>
+    /// Обновляет пароль пользователя.
+    /// </summary>
+    /// <param name="newPasswordHash">Новый хеш пароля (BCrypt).</param>
+    public void UpdatePassword(string newPasswordHash)
+    {
+        if (string.IsNullOrWhiteSpace(newPasswordHash))
+        {
+            throw new ArgumentException("Хеш пароля обязателен.", nameof(newPasswordHash));
+        }
+
+        PasswordHash = newPasswordHash;
+        UpdatedAt = DateTimeOffset.UtcNow;
+    }
+
+    /// <summary>
+    /// Повышает пользователя до администратора.
+    /// </summary>
+    public void PromoteToAdmin()
+    {
+        Role = UserRole.Admin;
+        UpdatedAt = DateTimeOffset.UtcNow;
+    }
+
+    /// <summary>
+    /// Понижает администратора до обычного пользователя.
+    /// </summary>
+    public void DemoteToUser()
+    {
+        Role = UserRole.User;
+        UpdatedAt = DateTimeOffset.UtcNow;
     }
 }

@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using BulletinBoard.Application.Abstractions;
 using BulletinBoard.Application.Contexts.Advertisements.Mapping;
+using BulletinBoard.Application.Exceptions;
 using BulletinBoard.Contracts.Advertisements;
 using BulletinBoard.Contracts.Common;
 using BulletinBoard.Domain.Entities;
@@ -16,6 +17,7 @@ public sealed class AdvertisementService : IAdvertisementService
     private readonly IAdvertisementFileRepository _advertisementFileRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
+    private readonly ICurrentUserService _currentUserService;
     
     /// <summary>
     /// Инициализирует экземпляр <see cref="AdvertisementService"/>.
@@ -25,18 +27,21 @@ public sealed class AdvertisementService : IAdvertisementService
     /// <param name="advertisementFileRepository">Репозиторий для работы с файлами.</param>
     /// <param name="unitOfWork">Unit of Work для управления транзакциями.</param>
     /// <param name="mapper">Маппер для преобразования между Domain и DTO.</param>
+    /// /// <param name="currentUserService">Сервис для получения информации о текущем пользователе.</param>
     public AdvertisementService(
         IAdvertisementRepository advertisementRepository,
         IAdvertisementReadRepository advertisementReadRepository,
         IAdvertisementFileRepository advertisementFileRepository,
         IUnitOfWork unitOfWork,
-        IMapper mapper)
+        IMapper mapper,
+        ICurrentUserService currentUserService)
     {
         _advertisementRepository = advertisementRepository;
         _advertisementReadRepository = advertisementReadRepository;
         _advertisementFileRepository = advertisementFileRepository;
         _unitOfWork = unitOfWork;
         _mapper = mapper;
+        _currentUserService = currentUserService;
     }
     
     /// <inheritdoc />
@@ -115,11 +120,7 @@ public sealed class AdvertisementService : IAdvertisementService
             throw new ArgumentException("Contact is required.", nameof(dto));
         }
         
-        var advertisement = await _advertisementRepository.GetByIdAsync(id, cancellationToken);
-        if (advertisement == null)
-        {
-            return null;
-        }
+        var advertisement = await GetAndValidateOwnershipAsync(id, "редактирования", cancellationToken);
         
         advertisement.UpdateText(dto.Title, dto.Description);
         advertisement.ChangeCategory(dto.CategoryId);
@@ -145,11 +146,7 @@ public sealed class AdvertisementService : IAdvertisementService
     {
         ArgumentNullException.ThrowIfNull(dto);
         
-        var advertisement = await _advertisementRepository.GetByIdAsync(id, cancellationToken);
-        if (advertisement == null)
-        {
-            return false;
-        }
+        var advertisement = await GetAndValidateOwnershipAsync(id, "изменения статуса", cancellationToken);
         
         var newStatus = dto.Status.ToDomain();
         if (advertisement.Status == newStatus)
@@ -167,6 +164,8 @@ public sealed class AdvertisementService : IAdvertisementService
     /// <inheritdoc />
     public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
+        EnsureIsAdmin();
+        
         var advertisement = await _advertisementRepository.GetByIdAsync(id, cancellationToken);
         if (advertisement == null)
         {
@@ -184,6 +183,8 @@ public sealed class AdvertisementService : IAdvertisementService
     {
         var adExists = await _advertisementFileRepository.AdvertisementExistsAsync(advertisementId, cancellationToken);
         if (!adExists) return false;
+        
+        await GetAndValidateOwnershipAsync(advertisementId, "прикрепления файлов к", cancellationToken);
 
         var fileExists = await _advertisementFileRepository.FileExistsAsync(fileId, cancellationToken);
         if (!fileExists) return false;
@@ -203,6 +204,57 @@ public sealed class AdvertisementService : IAdvertisementService
     /// <inheritdoc />
     public async Task<bool> DetachFileAsync(Guid advertisementId, Guid fileId, CancellationToken cancellationToken = default)
     {
+        await GetAndValidateOwnershipAsync(advertisementId, "открепления файлов от", cancellationToken);
+        
         return await _advertisementFileRepository.DeleteAsync(advertisementId, fileId, cancellationToken);
+    }
+    
+    /// <summary>
+    /// Получает объявление и проверяет права доступа.
+    /// </summary>
+    /// <param name="id">ID объявления.</param>
+    /// <param name="operationName">Название операции для сообщения об ошибке.</param>
+    /// <param name="cancellationToken">Токен отмены.</param>
+    /// <returns>Объявление.</returns>
+    /// <exception cref="NotFoundException">Если объявление не найдено.</exception>
+    /// <exception cref="UnauthorizedAccessException">Если нет прав доступа.</exception>
+    private async Task<Advertisement> GetAndValidateOwnershipAsync(
+        Guid id,
+        string operationName,
+        CancellationToken cancellationToken)
+    {
+        var advertisement = await _advertisementRepository.GetByIdAsync(id, cancellationToken);
+        if (advertisement == null)
+        {
+            throw new NotFoundException(nameof(Advertisement), id.ToString());
+        }
+
+        if (!_currentUserService.IsOwnerOrAdmin(advertisement.AuthorId))
+        {
+            throw new UnauthorizedAccessException($"У вас нет прав для {operationName} этого объявления.");
+        }
+
+        return advertisement;
+    }
+
+    /// <summary>
+    /// Проверяет, является ли текущий пользователь администратором.
+    /// </summary>
+    /// <exception cref="UnauthorizedAccessException">Если пользователь не является администратором.</exception>
+    private void EnsureIsAdmin()
+    {
+        if (!_currentUserService.IsAdmin())
+        {
+            throw new UnauthorizedAccessException("Только администраторы могут выполнять эту операцию.");
+        }
+    }
+    
+    /// <inheritdoc />
+    public Task<PagedResult<AdvertisementDto>> GetByAuthorAsync(
+        Guid authorId,
+        PageRequest page,
+        CancellationToken cancellationToken = default)
+    {
+        return _advertisementReadRepository.GetByAuthorAsync(authorId, page, cancellationToken);
     }
 }

@@ -31,16 +31,16 @@ public interface IUserService
         PageRequest page,
         CancellationToken cancellationToken = default);
     
-    /// <summary>
-    /// Создаёт пользователя.
-    /// </summary>
-    /// <param name="dto">Данные для создания пользователя.</param>
-    /// <param name="cancellationToken">Токен отмены операции.</param>
-    /// <returns>Созданный пользователь.</returns>
-    /// <exception cref="ArgumentException">
-    /// Если входные данные некорректны (например, обязательные поля пусты).
-    /// </exception>
-    Task<UserDto> CreateAsync(CreateUserDto dto, CancellationToken cancellationToken = default);
+    // /// <summary>
+    // /// Создаёт пользователя.
+    // /// </summary>
+    // /// <param name="dto">Данные для создания пользователя.</param>
+    // /// <param name="cancellationToken">Токен отмены операции.</param>
+    // /// <returns>Созданный пользователь.</returns>
+    // /// <exception cref="ArgumentException">
+    // /// Если входные данные некорректны (например, обязательные поля пусты).
+    // /// </exception>
+    // Task<UserDto> CreateAsync(CreateUserDto dto, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Обновляет данные пользователя.

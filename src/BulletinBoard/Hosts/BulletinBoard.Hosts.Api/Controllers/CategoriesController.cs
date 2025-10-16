@@ -2,6 +2,7 @@
 using BulletinBoard.Application.Contexts.Categories;
 using BulletinBoard.Contracts.Categories;
 using BulletinBoard.Contracts.Common;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BulletinBoard.Hosts.Api.Controllers;
@@ -57,8 +58,11 @@ public sealed class CategoriesController : ControllerBase
     /// <param name="cancellationToken">Токен отмены.</param>
     /// <returns>Созданная категория.</returns>
     [HttpPost("root")]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(CategoryDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<CategoryDto>> CreateRoot([FromBody] CreateCategoryDto request, CancellationToken cancellationToken = default)
     {
         var created = await _service.CreateRootAsync(request.Name, cancellationToken);
@@ -73,8 +77,11 @@ public sealed class CategoriesController : ControllerBase
     /// <param name="cancellationToken">Токен отмены.</param>
     /// <returns>Созданная категория.</returns>
     [HttpPost("{parentId:guid}/child")]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(CategoryDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<CategoryDto>> CreateChild(Guid parentId, [FromBody] CreateCategoryDto request, CancellationToken cancellationToken = default)
     {
@@ -90,7 +97,10 @@ public sealed class CategoriesController : ControllerBase
     /// <param name="cancellationToken">Токен отмены.</param>
     /// <returns>204 при успехе, 404 если не найдена.</returns>
     [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken = default)
     {

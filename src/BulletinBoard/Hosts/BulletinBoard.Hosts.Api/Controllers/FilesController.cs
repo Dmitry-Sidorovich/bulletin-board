@@ -1,5 +1,6 @@
 ﻿using BulletinBoard.Application.Contexts.Files.Services;
 using BulletinBoard.Contracts.Files;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -29,9 +30,11 @@ public class FilesController : ControllerBase
     /// <param name="cancellationToken">Токен отмены.</param>
     /// <returns>Результат загрузки с ID и URL файла.</returns>
     [HttpPost]
+    [Authorize]
     [Consumes("multipart/form-data")]
     [ProducesResponseType(typeof(FileUploadResultDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<FileUploadResultDto>> Upload(
         IFormFile file,
         CancellationToken cancellationToken = default)
@@ -105,7 +108,10 @@ public class FilesController : ControllerBase
     /// <param name="cancellationToken">Токен отмены.</param>
     /// <returns>204 No Content при успехе.</returns>
     [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(
         Guid id,

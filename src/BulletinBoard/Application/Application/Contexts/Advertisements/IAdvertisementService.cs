@@ -87,4 +87,12 @@ public interface IAdvertisementService
     /// False, если привязка не найдена.
     /// </returns>
     Task<bool> DetachFileAsync(Guid advertisementId, Guid fileId, CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Возвращает объявления пользователя с пагинацией.
+    /// </summary>
+    Task<PagedResult<AdvertisementDto>> GetByAuthorAsync(
+        Guid authorId, 
+        PageRequest page, 
+        CancellationToken cancellationToken = default);
 }

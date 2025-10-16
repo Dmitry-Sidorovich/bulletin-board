@@ -1,9 +1,12 @@
 ﻿using BulletinBoard.Application.Abstractions;
 using BulletinBoard.Application.Contexts.Advertisements;
+using BulletinBoard.Application.Contexts.Auth;
 using BulletinBoard.Application.Contexts.Categories;
 using BulletinBoard.Application.Contexts.Files.Repositories;
 using BulletinBoard.Application.Contexts.Users;
 using BulletinBoard.Infrastructure.Contexts.Advertisements;
+using BulletinBoard.Infrastructure.Contexts.Auth.Repositories;
+using BulletinBoard.Infrastructure.Contexts.Auth.Services;
 using BulletinBoard.Infrastructure.Contexts.Categories;
 using BulletinBoard.Infrastructure.Contexts.Categories.Repositories;
 using BulletinBoard.Infrastructure.Contexts.Files.Repositories;
@@ -12,6 +15,8 @@ using BulletinBoard.Infrastructure.DataAccess;
 using BulletinBoard.Infrastructure.DataAccess.Db;
 using BulletinBoard.Infrastructure.FileStorage;
 using BulletinBoard.Infrastructure.Mapping.Profiles;
+using BulletinBoard.Infrastructure.Services;
+using BulletinBoard.Infrastructure.Services.Auth;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -57,6 +62,17 @@ public static class ComponentRegistrar
         services.AddScoped<IUserRepository, UserRepository>();
         
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+        
+        // HTTP Context (для доступа к текущему пользователю)
+        services.AddHttpContextAccessor();
+        
+        // Сервис текущего пользователя
+        services.AddScoped<ICurrentUserService, CurrentUserService>();
+        
+        services.AddScoped<IPasswordHasher, PasswordHasher>();
+        services.AddScoped<IJwtTokenService, JwtTokenService>();
+        services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+        services.AddScoped<IAuthService, AuthService>();
 
         return services;
     }

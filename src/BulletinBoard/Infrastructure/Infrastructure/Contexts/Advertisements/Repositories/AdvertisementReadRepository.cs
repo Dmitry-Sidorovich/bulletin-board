@@ -103,4 +103,45 @@ public sealed class AdvertisementReadRepository : IAdvertisementReadRepository
             })
             .ToListAsync(cancellationToken);
     }
+    
+    /// <inheritdoc />
+    public async Task<PagedResult<AdvertisementDto>> GetByAuthorAsync(
+        Guid authorId,
+        PageRequest page,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _context.Advertisements
+            .Where(a => a.AuthorId == authorId)
+            .OrderByDescending(a => a.CreatedAt);
+
+        var total = await query.CountAsync(cancellationToken);
+    
+        var items = await query
+            .Skip((page.Page - 1) * page.PageSize)
+            .Take(page.PageSize)
+            .Select(a => new AdvertisementDto
+            {
+                Id = a.Id,
+                Title = a.Title,
+                Description = a.Description,
+                CategoryId = a.CategoryId,
+                AuthorId = a.AuthorId,
+                Contact = new ContactDto
+                {
+                    Name = a.Contact.Name,
+                    Email = a.Contact.Email,
+                    Phone = a.Contact.Phone
+                },
+                CreatedAt = a.CreatedAt
+            })
+            .ToListAsync(cancellationToken);
+
+        return new PagedResult<AdvertisementDto>
+        {
+            Items = items,
+            TotalCount = total,
+            Page = page.Page,
+            PageSize = page.PageSize
+        };
+    }
 }

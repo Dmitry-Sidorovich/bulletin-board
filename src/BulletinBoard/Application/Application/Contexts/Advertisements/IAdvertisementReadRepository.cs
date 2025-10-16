@@ -30,4 +30,12 @@ public interface IAdvertisementReadRepository
         Guid categoryId,
         PageRequest page,
         CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Возвращает объявления пользователя с пагинацией.
+    /// </summary>
+    Task<PagedResult<AdvertisementDto>> GetByAuthorAsync(
+        Guid authorId, 
+        PageRequest page, 
+        CancellationToken cancellationToken = default);
 }

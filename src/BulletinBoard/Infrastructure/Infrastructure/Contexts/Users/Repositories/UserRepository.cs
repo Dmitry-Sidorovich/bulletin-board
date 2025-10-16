@@ -43,4 +43,11 @@ public sealed class UserRepository : IUserRepository
         
         return Task.CompletedTask;
     }
+    
+    /// <inheritdoc />
+    public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.Users
+            .FirstOrDefaultAsync(u => u.Email == email, cancellationToken);
+    }
 }

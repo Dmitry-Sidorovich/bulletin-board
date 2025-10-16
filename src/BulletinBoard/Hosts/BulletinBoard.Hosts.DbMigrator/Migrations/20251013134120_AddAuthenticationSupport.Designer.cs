@@ -3,6 +3,7 @@ using System;
 using BulletinBoard.Hosts.DbMigrator;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BulletinBoard.Hosts.DbMigrator.Migrations
 {
     [DbContext(typeof(MigrationDbContext))]
-    partial class MigrationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251013134120_AddAuthenticationSupport")]
+    partial class AddAuthenticationSupport
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -250,7 +253,7 @@ namespace BulletinBoard.Hosts.DbMigrator.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.OwnsOne("BulletinBoard.Domain.Entities.Advertisement.Contact#BulletinBoard.Domain.ValueObjects.Contact", "Contact", b1 =>
+                    b.OwnsOne("BulletinBoard.Domain.ValueObjects.Contact", "Contact", b1 =>
                         {
                             b1.Property<Guid>("AdvertisementId")
                                 .HasColumnType("uuid");
@@ -274,7 +277,7 @@ namespace BulletinBoard.Hosts.DbMigrator.Migrations
 
                             b1.HasKey("AdvertisementId");
 
-                            b1.ToTable("advertisements", (string)null);
+                            b1.ToTable("advertisements");
 
                             b1.WithOwner()
                                 .HasForeignKey("AdvertisementId");

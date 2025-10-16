@@ -78,6 +78,17 @@ public class ExceptionHandlingMiddleware
                     TraceId = context.TraceIdentifier
                 }),
             
+            UnauthorizedAccessException unauthorized => (
+                StatusCodes.Status403Forbidden,
+                new ErrorResponse
+                {
+                    Status = StatusCodes.Status403Forbidden,
+                    Title = "Доступ запрещён",
+                    Detail = unauthorized.Message,
+                    TraceId = context.TraceIdentifier,
+                    Timestamp = DateTimeOffset.UtcNow
+                }),
+            
             FluentValidation.ValidationException fluentValidation => (
                 StatusCodes.Status400BadRequest,
                 new ErrorResponse
@@ -111,16 +122,6 @@ public class ExceptionHandlingMiddleware
                     Status = StatusCodes.Status400BadRequest,
                     Title = "Некорректные параметры запроса",
                     Detail = argumentEx.Message,
-                    TraceId = context.TraceIdentifier
-                }),
-
-            UnauthorizedAccessException => (
-                StatusCodes.Status403Forbidden,
-                new ErrorResponse
-                {
-                    Status = StatusCodes.Status403Forbidden,
-                    Title = "Доступ запрещен",
-                    Detail = "У вас нет прав для выполнения этой операции.",
                     TraceId = context.TraceIdentifier
                 }),
 

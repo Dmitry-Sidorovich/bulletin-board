@@ -1,4 +1,5 @@
 ﻿using BulletinBoard.Domain.Entities;
+using BulletinBoard.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -17,6 +18,8 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.HasKey(x => x.Id);
         builder.Property(x => x.CreatedAt).IsRequired();
+        
+        builder.Property(x => x.UpdatedAt);
 
         builder.Property(x => x.DisplayName)
             .IsRequired()
@@ -28,5 +31,21 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.Property(x => x.Phone)
             .HasMaxLength(50);
+        
+        builder.Property(x => x.PasswordHash)
+            .IsRequired()
+            .HasMaxLength(255);
+
+        builder.Property(x => x.Role)
+            .IsRequired()
+            .HasMaxLength(20)
+            .HasConversion(
+                v => v.ToString(),
+                v => Enum.Parse<UserRole>(v));
+
+        builder.HasMany(x => x.RefreshTokens)
+            .WithOne(rt => rt.User)
+            .HasForeignKey(rt => rt.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

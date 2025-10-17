@@ -5,6 +5,7 @@ using BulletinBoard.Application.Contexts.Categories;
 using BulletinBoard.Application.Contexts.Files.Repositories;
 using BulletinBoard.Application.Contexts.Users;
 using BulletinBoard.Infrastructure.Contexts.Advertisements;
+using BulletinBoard.Infrastructure.Contexts.Advertisements.Repositories;
 using BulletinBoard.Infrastructure.Contexts.Auth.Repositories;
 using BulletinBoard.Infrastructure.Contexts.Auth.Services;
 using BulletinBoard.Infrastructure.Contexts.Categories;
@@ -45,34 +46,65 @@ public static class ComponentRegistrar
 
         services.AddDbContext<BulletinBoardDbContext>(opt => opt.UseNpgsql(cs));
 
-        // Профили AutoMapper из сборки Infrastructure (Mapping/Profiles/*).
         services.AddAutoMapper(typeof(AdvertisementProfile).Assembly);
-
-        // Read-репозитории (DTO/ProjectTo)
-        services.AddScoped<IAdvertisementReadRepository, AdvertisementReadRepository>();
-        services.AddScoped<ICategoryReadRepository, CategoryReadRepository>();
+        
+        // Регистрируем оригинальную реализацию
+        services.AddScoped<AdvertisementReadRepository>();
+        // Регистрируем декоратор
+        services.AddScoped<IAdvertisementReadRepository>(provider =>
+        {
+            var inner = provider.GetRequiredService<AdvertisementReadRepository>();
+            var cache = provider.GetRequiredService<ICacheService>();
+            var config = provider.GetRequiredService<IConfiguration>();
+            return new CachedAdvertisementReadRepository(inner, cache, config);
+        });
+        
+        services.AddScoped<CategoryReadRepository>();
+        services.AddScoped<ICategoryReadRepository>(provider =>
+        {
+            var inner = provider.GetRequiredService<CategoryReadRepository>();
+            var cache = provider.GetRequiredService<ICacheService>();
+            var config = provider.GetRequiredService<IConfiguration>();
+            return new CachedCategoryReadRepository(inner, cache, config);
+        });
+        
         services.AddScoped<IUserReadRepository, UserReadRepository>();
         services.AddScoped<IFileRepository, FileRepository>();
         services.AddScoped<IFileStorageService, LocalFileStorageService>();
         services.AddScoped<IAdvertisementFileRepository, AdvertisementFileRepository>();
-
-        // Write-репозитории (домен)
+        
         services.AddScoped<IAdvertisementRepository, AdvertisementRepository>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
         
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         
-        // HTTP Context (для доступа к текущему пользователю)
         services.AddHttpContextAccessor();
         
-        // Сервис текущего пользователя
         services.AddScoped<ICurrentUserService, CurrentUserService>();
         
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
         services.AddScoped<IAuthService, AuthService>();
+        
+        services.AddMemoryCache();
+        
+        var enableRedis = configuration.GetValue<bool>("Caching:EnableRedis");
+        if (enableRedis)
+        {
+            var redisConnection = configuration.GetConnectionString("Redis");
+            services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = redisConnection;
+                options.InstanceName = "BulletinBoard:";
+            });
+        }
+        else
+        {
+            services.AddDistributedMemoryCache();
+        }
+        services.AddScoped<ICacheService, HybridCacheService>();
 
         return services;
     }

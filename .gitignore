@@ -1,3 +1,6 @@
+.env
+appsettings.Development.json
+
 # Rider / IntelliJ
 .idea/
 *.iml

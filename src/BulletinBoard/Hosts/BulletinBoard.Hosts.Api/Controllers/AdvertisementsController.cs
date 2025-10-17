@@ -1,5 +1,4 @@
-﻿using System.Security.Claims;
-using BulletinBoard.Application.Abstractions;
+﻿using BulletinBoard.Application.Abstractions;
 using BulletinBoard.Application.Common;
 using BulletinBoard.Application.Contexts.Advertisements;
 using BulletinBoard.Contracts.Advertisements;
@@ -100,10 +99,20 @@ public sealed class AdvertisementsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<AdvertisementDto>> Update(Guid id, [FromBody] UpdateAdvertisementDto request, CancellationToken cancellationToken = default)
     {
-        
-        
+        var currentUserId = _currentUserService.GetCurrentUserId();
+        if (currentUserId == null) return Unauthorized();
+
+        // Проверяем владельца ДО вызова сервиса
+        var ad = await _service.GetByIdAsync(id, cancellationToken);
+        if (ad == null) return NotFound();
+    
+        if (!_currentUserService.IsOwnerOrAdmin(ad.AuthorId))
+        {
+            return Forbid();
+        }
+
         var updated = await _service.UpdateAsync(id, request, cancellationToken);
-        return updated is null ? NotFound() : Ok(updated);
+        return updated == null ? NotFound() : Ok(updated);
     }
 
     /// <summary>

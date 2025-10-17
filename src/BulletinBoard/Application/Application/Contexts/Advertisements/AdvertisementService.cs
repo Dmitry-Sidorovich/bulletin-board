@@ -18,6 +18,7 @@ public sealed class AdvertisementService : IAdvertisementService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly ICurrentUserService _currentUserService;
+    private readonly ICacheService _cacheService;
     
     /// <summary>
     /// Инициализирует экземпляр <see cref="AdvertisementService"/>.
@@ -27,14 +28,16 @@ public sealed class AdvertisementService : IAdvertisementService
     /// <param name="advertisementFileRepository">Репозиторий для работы с файлами.</param>
     /// <param name="unitOfWork">Unit of Work для управления транзакциями.</param>
     /// <param name="mapper">Маппер для преобразования между Domain и DTO.</param>
-    /// /// <param name="currentUserService">Сервис для получения информации о текущем пользователе.</param>
+    /// <param name="currentUserService">Сервис для получения информации о текущем пользователе.</param>
+    /// <param name="cacheService">Сервис для кеширования.</param>
     public AdvertisementService(
         IAdvertisementRepository advertisementRepository,
         IAdvertisementReadRepository advertisementReadRepository,
         IAdvertisementFileRepository advertisementFileRepository,
         IUnitOfWork unitOfWork,
         IMapper mapper,
-        ICurrentUserService currentUserService)
+        ICurrentUserService currentUserService,
+        ICacheService cacheService)
     {
         _advertisementRepository = advertisementRepository;
         _advertisementReadRepository = advertisementReadRepository;
@@ -42,6 +45,7 @@ public sealed class AdvertisementService : IAdvertisementService
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _currentUserService = currentUserService;
+        _cacheService = cacheService;
     }
     
     /// <inheritdoc />
@@ -135,6 +139,8 @@ public sealed class AdvertisementService : IAdvertisementService
         await _advertisementRepository.UpdateAsync(advertisement, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         
+        await _cacheService.RemoveAsync($"ad:{id}", cancellationToken);
+        
         return _mapper.Map<AdvertisementDto>(advertisement);
     }
     
@@ -158,14 +164,14 @@ public sealed class AdvertisementService : IAdvertisementService
         await _advertisementRepository.UpdateAsync(advertisement, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
+        await _cacheService.RemoveAsync($"ad:{id}", cancellationToken);
+        
         return true;
     }
 
     /// <inheritdoc />
     public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        EnsureIsAdmin();
-        
         var advertisement = await _advertisementRepository.GetByIdAsync(id, cancellationToken);
         if (advertisement == null)
         {
@@ -174,6 +180,8 @@ public sealed class AdvertisementService : IAdvertisementService
 
         await _advertisementRepository.DeleteAsync(id, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+            
+        await _cacheService.RemoveAsync($"ad:{id}", cancellationToken);
 
         return true;
     }
@@ -198,6 +206,8 @@ public sealed class AdvertisementService : IAdvertisementService
         await _advertisementFileRepository.AddAsync(advertisementFile, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
+        await _cacheService.RemoveAsync($"ad:{advertisementId}", cancellationToken);
+        
         return true;
     }
 
@@ -206,11 +216,17 @@ public sealed class AdvertisementService : IAdvertisementService
     {
         await GetAndValidateOwnershipAsync(advertisementId, "открепления файлов от", cancellationToken);
         
-        return await _advertisementFileRepository.DeleteAsync(advertisementId, fileId, cancellationToken);
+        var deleted =  await _advertisementFileRepository.DeleteAsync(advertisementId, fileId, cancellationToken);
+
+        if (deleted)
+        {
+            await _cacheService.RemoveAsync($"ad:{advertisementId}", cancellationToken);
+        }
+        return deleted;
     }
     
     /// <summary>
-    /// Получает объявление и проверяет права доступа.
+    /// Получает объявление и проверяет права доступа (владелец или админ).
     /// </summary>
     /// <param name="id">ID объявления.</param>
     /// <param name="operationName">Название операции для сообщения об ошибке.</param>
@@ -228,25 +244,13 @@ public sealed class AdvertisementService : IAdvertisementService
         {
             throw new NotFoundException(nameof(Advertisement), id.ToString());
         }
-
+        
         if (!_currentUserService.IsOwnerOrAdmin(advertisement.AuthorId))
         {
             throw new UnauthorizedAccessException($"У вас нет прав для {operationName} этого объявления.");
         }
 
         return advertisement;
-    }
-
-    /// <summary>
-    /// Проверяет, является ли текущий пользователь администратором.
-    /// </summary>
-    /// <exception cref="UnauthorizedAccessException">Если пользователь не является администратором.</exception>
-    private void EnsureIsAdmin()
-    {
-        if (!_currentUserService.IsAdmin())
-        {
-            throw new UnauthorizedAccessException("Только администраторы могут выполнять эту операцию.");
-        }
     }
     
     /// <inheritdoc />

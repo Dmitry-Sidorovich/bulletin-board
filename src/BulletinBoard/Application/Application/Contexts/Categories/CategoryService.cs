@@ -13,6 +13,7 @@ public sealed class CategoryService : ICategoryService
     private readonly ICategoryReadRepository _categoryReadRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
+    private readonly ICacheService _cacheService;
 
     /// <summary>
     /// Инициализирует экземпляр <see cref="CategoryService"/>.
@@ -21,16 +22,19 @@ public sealed class CategoryService : ICategoryService
     /// <param name="categoryReadRepository">Read-репозиторий проекций категорий (DTO).</param>
     /// <param name="unitOfWork">Единица работы для атомарного сохранения.</param>
     /// <param name="mapper">AutoMapper для преобразования Domain→DTO.</param>
+    /// <param name="cacheService">Сервис для кеширования.</param>
     public CategoryService(
         ICategoryRepository categoryRepository,
         ICategoryReadRepository categoryReadRepository,
         IUnitOfWork unitOfWork,
-        IMapper mapper)
+        IMapper mapper,
+        ICacheService cacheService)
     {
         _categoryRepository = categoryRepository;
         _categoryReadRepository = categoryReadRepository;
         _unitOfWork = unitOfWork;
         _mapper = mapper;
+        _cacheService = cacheService;
     }
     
     /// <inheritdoc />
@@ -60,7 +64,6 @@ public sealed class CategoryService : ICategoryService
         {
             throw new ArgumentException("Name is required.", nameof(name));
         }
-        
 
         var category = new Category(name);
         await _categoryRepository.AddAsync(category, cancellationToken);
@@ -88,7 +91,8 @@ public sealed class CategoryService : ICategoryService
         var category = new Category(name, parentId);
         await _categoryRepository.AddAsync(category, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
-
+        
+        await _cacheService.RemoveAsync("categories:root", cancellationToken);
         return _mapper.Map<CategoryDto>(category);
     }
 
@@ -103,6 +107,8 @@ public sealed class CategoryService : ICategoryService
 
         await _categoryRepository.DeleteAsync(id, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+        
+        await _cacheService.RemoveAsync("categories:root", cancellationToken);
         return true;
     }
 }

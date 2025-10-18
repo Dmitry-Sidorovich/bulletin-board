@@ -59,9 +59,9 @@ public class File : EntityBase
             throw new ArgumentException("Размер файла должен быть больше 0.", nameof(fileSize));
         }
 
-        FileName = fileName;
-        FilePath = filePath;
-        ContentType = contentType;
+        FileName = fileName.Trim();
+        FilePath = filePath.Trim();
+        ContentType = contentType.Trim();
         FileSize = fileSize;
     }
 }

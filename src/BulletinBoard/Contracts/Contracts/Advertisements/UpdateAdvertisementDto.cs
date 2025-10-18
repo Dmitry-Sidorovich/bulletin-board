@@ -10,6 +10,9 @@ public sealed class UpdateAdvertisementDto
 
     /// <summary> Новое описание (может быть пустым).</summary>
     public string? Description { get; init; }
+    
+    /// <summary>Цена товара/услуги (может быть 0 для "Даром").</summary>
+    public decimal Price { get; set; }
 
     /// <summary> Новая категория (обязательна).</summary>
     public Guid CategoryId { get; init; }

@@ -4,16 +4,16 @@
 /// Контактные данные, сохраняемые как «снимок» внутри объявления.
 /// Не имеет собственного идентификатора и жизни вне объявления.
 /// </summary>
-public sealed class Contact
+public sealed record Contact
 {
     /// <summary> Имя продавца.</summary>
-    public string Name { get; } = null!;
+    public string Name { get; init; } = null!;
     
     /// <summary> Почта продавца (обязательна для объявления).</summary>
-    public string Email { get; } = null!;
+    public string Email { get; init; } = null!;
     
     /// <summary> Телефон продавца (опционально).</summary>
-    public string? Phone { get; }
+    public string? Phone { get; init; }
     
     /// <summary> Пустой конструктор для EF Core.</summary>
     private Contact() {}

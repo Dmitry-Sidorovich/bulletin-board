@@ -7,7 +7,7 @@ using BulletinBoard.Contracts.Files;
 using BulletinBoard.Infrastructure.DataAccess.Db;
 using Microsoft.EntityFrameworkCore;
 
-namespace BulletinBoard.Infrastructure.Contexts.Advertisements;
+namespace BulletinBoard.Infrastructure.Contexts.Advertisements.Repositories;
 
 /// <inheritdoc />
 public sealed class AdvertisementReadRepository : IAdvertisementReadRepository
@@ -142,6 +142,80 @@ public sealed class AdvertisementReadRepository : IAdvertisementReadRepository
             TotalCount = total,
             Page = page.Page,
             PageSize = page.PageSize
+        };
+    }
+    
+    /// <inheritdoc />
+    public async Task<PagedResult<AdvertisementDto>> SearchAsync(
+        AdvertisementFilterDto filter,
+        CancellationToken cancellationToken = default)
+    {
+        var predicate = AdvertisementPredicateBuilder.Build(filter);
+    
+        var query = _context.Advertisements
+            .AsNoTracking()
+            .Where(predicate);
+    
+        // Сортировка
+        query = filter.SortBy switch
+        {
+            AdvertisementSortBy.CreatedAtDesc => query.OrderByDescending(a => a.CreatedAt),
+            AdvertisementSortBy.CreatedAtAsc => query.OrderBy(a => a.CreatedAt),
+            AdvertisementSortBy.PriceAsc => query.OrderBy(a => a.Price),
+            AdvertisementSortBy.PriceDesc => query.OrderByDescending(a => a.Price),
+            AdvertisementSortBy.TitleAsc => query.OrderBy(a => a.Title),
+            AdvertisementSortBy.TitleDesc => query.OrderByDescending(a => a.Title),
+            _ => query.OrderByDescending(a => a.CreatedAt)
+        };
+    
+        var total = await query.CountAsync(cancellationToken);
+    
+        // ✅ НАЧАЛО ИЗМЕНЕНИЙ - исправлен маппинг (StatusDto вместо Status)
+        var items = await query
+            .Skip((filter.PageNumber - 1) * filter.PageSize)
+            .Take(filter.PageSize)
+            .Select(a => new AdvertisementDto
+            {
+                Id = a.Id,
+                Title = a.Title,
+                Description = a.Description,
+                Price = a.Price,
+                Status = (AdStatusDto)a.Status, // ✅ Исправлено с Status на StatusDto
+                CategoryId = a.CategoryId,
+                AuthorId = a.AuthorId,
+                Contact = new ContactDto
+                {
+                    Name = a.Contact.Name,
+                    Email = a.Contact.Email,
+                    Phone = a.Contact.Phone
+                },
+                CreatedAt = a.CreatedAt
+            })
+            .ToListAsync(cancellationToken);
+        // ✅ КОНЕЦ ИЗМЕНЕНИЙ
+    
+        // Получаем категории отдельным запросом
+        if (items.Any())
+        {
+            var categoryIds = items.Select(a => a.CategoryId).Distinct().ToList();
+            var categories = await _context.Categories
+                .AsNoTracking()
+                .Where(c => categoryIds.Contains(c.Id))
+                .ToDictionaryAsync(c => c.Id, c => c.Name, cancellationToken);
+    
+            foreach (var item in items)
+            {
+                item.CategoryName = categories.GetValueOrDefault(item.CategoryId);
+                item.Files = await GetFilesAsync(item.Id, cancellationToken);
+            }
+        }
+    
+        return new PagedResult<AdvertisementDto>
+        {
+            Items = items,
+            TotalCount = total,
+            Page = filter.PageNumber,
+            PageSize = filter.PageSize
         };
     }
 }

@@ -25,6 +25,9 @@ public class Advertisement : EntityBase
     /// </summary>
     public string Description { get; private set; } = string.Empty;
     
+    /// <summary>Цена товара/услуги (может быть 0 для "Даром").</summary>
+    public decimal Price { get; private set; }
+    
     /// <summary>
     /// Идентификатор категории (FK), к которой относится объявление.
     /// </summary>
@@ -49,6 +52,7 @@ public class Advertisement : EntityBase
     /// </summary>
     /// <param name="title"> Заголовок (обязателен, Trim).</param>
     /// <param name="description"> Описание (может быть пустым, Trim).</param>
+    /// <param name="price">Цена (может быть 0 для "Даром").</param>
     /// <param name="categoryId"> Категория (обязательна, не может быть Guid.Empty).</param>
     /// <param name="authorId"> Автор/владелец (обязателен, не Guid.Empty).</param>
     /// <param name="contact"> Контактный «снимок» (обязателен).</param>
@@ -57,6 +61,7 @@ public class Advertisement : EntityBase
     public Advertisement(
         string title,
         string? description,
+        decimal price,
         Guid categoryId,
         Guid authorId,
         Contact contact,
@@ -70,7 +75,10 @@ public class Advertisement : EntityBase
         {
             throw new ArgumentException($"Заголовок не может превышать {MaxTitleLength} символов.", nameof(title));
         }
-
+        if (price < 0)
+        {
+            throw new ArgumentException("Цена не может быть отрицательной.", nameof(price));
+        }
         if (categoryId == Guid.Empty)
         {
             throw new ArgumentException("Категория обязательна.", nameof(categoryId));
@@ -82,6 +90,7 @@ public class Advertisement : EntityBase
         
         Contact = contact ?? throw new ArgumentNullException(nameof(contact));
         Title = title.Trim();
+        Price = price;
         
         var normalizedDescription = (description ?? string.Empty).Trim();
         if (normalizedDescription.Length > MaxDescriptionLength)
@@ -100,8 +109,9 @@ public class Advertisement : EntityBase
     /// </summary>
     /// <param name="newTitle">Новый заголовок (обязателен).</param>
     /// <param name="newDescription">Новый текст (может быть пустым).</param>
+    /// <param name="newPrice">Новая цена (не может быть отрицательной).</param>
     /// <exception cref="ArgumentException">Если <paramref name="newTitle"/> пустой.</exception>
-    public void UpdateText(string newTitle, string? newDescription)
+    public void UpdateText(string newTitle, string? newDescription, decimal newPrice)
     {
         if (string.IsNullOrWhiteSpace(newTitle))
         {
@@ -111,8 +121,13 @@ public class Advertisement : EntityBase
         {
             throw new ArgumentException($"Заголовок не может превышать {MaxTitleLength} символов.", nameof(newTitle));
         }
-
+        if (newPrice < 0)
+        {
+            throw new ArgumentException("Цена не может быть отрицательной.", nameof(newPrice));
+        }
+        
         Title = newTitle.Trim();
+        Price = newPrice;
         var normalizedDescription = (newDescription ?? string.Empty).Trim();
         if (normalizedDescription.Length > MaxDescriptionLength)
         {

@@ -6,5 +6,5 @@
 public sealed class ChangeAdvertisementStatusDto
 {
     /// <summary> Новый статус объявления.</summary>
-    public AdStatus Status { get; init; }
+    public AdStatusDto StatusDto { get; init; }
 }

@@ -77,4 +77,18 @@ public class RefreshToken : EntityBase
         IsRevoked = true;
         RevokedAt = DateTimeOffset.UtcNow;
     }
+    
+    
+    // /// TEMP for tests
+    // ///
+    // /// 
+    // /// <summary>
+    // /// Проверяет, истёк ли токен.
+    // /// </summary>
+    // public bool IsExpired() => ExpiresAt <= DateTimeOffset.UtcNow;
+    //
+    // /// <summary>
+    // /// Проверяет, валиден ли токен (не истёк и не отозван).
+    // /// </summary>
+    // public bool IsValid() => !IsRevoked && !IsExpired();
 }

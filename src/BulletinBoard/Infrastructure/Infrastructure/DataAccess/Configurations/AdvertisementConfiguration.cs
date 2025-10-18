@@ -17,6 +17,7 @@ public sealed class AdvertisementConfiguration : IEntityTypeConfiguration<Advert
 
         builder.HasKey(x => x.Id);
         builder.Property(x => x.CreatedAt).IsRequired();
+        builder.Property(a => a.UpdatedAt);
 
         builder.Property(x => x.Title)
             .IsRequired()
@@ -25,6 +26,10 @@ public sealed class AdvertisementConfiguration : IEntityTypeConfiguration<Advert
         builder.Property(x => x.Description)
             .IsRequired()
             .HasMaxLength(1000);
+        
+        builder.Property(a => a.Price)
+            .IsRequired()
+            .HasColumnType("decimal(18,2)"); 
 
         builder.Property(x => x.Status)
             .HasConversion<int>() // enum → int
@@ -57,5 +62,11 @@ public sealed class AdvertisementConfiguration : IEntityTypeConfiguration<Advert
                 .HasColumnName("contact_phone")
                 .HasMaxLength(50);
         });
+        
+        builder.HasIndex(a => a.CategoryId);
+        builder.HasIndex(a => a.AuthorId);
+        builder.HasIndex(a => a.Status);
+        builder.HasIndex(a => a.Price); 
+        builder.HasIndex(a => a.CreatedAt);
     }
 }

@@ -13,9 +13,15 @@ public sealed class AdvertisementDto
 
     /// <summary> Описание объявления.</summary>
     public string Description { get; init; } = string.Empty;
+    
+    /// <summary>Цена товара/услуги (может быть 0 для "Даром").</summary>
+    public decimal Price { get; init; }
 
     /// <summary> FK на категорию.</summary>
     public Guid CategoryId { get; init; }
+    
+    /// <summary>Название категории (для удобства отображения).</summary>
+    public string? CategoryName { get; set; }
 
     /// <summary> FK на автора.</summary>
     public Guid AuthorId { get; init; }
@@ -24,7 +30,7 @@ public sealed class AdvertisementDto
     public ContactDto Contact { get; init; } = default!;
 
     /// <summary> Текущий статус объявления.</summary>
-    public AdStatus Status { get; init; }
+    public AdStatusDto Status { get; init; }
 
     /// <summary> Время создания (UTC).</summary>
     public DateTimeOffset CreatedAt { get; init; }

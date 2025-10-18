@@ -3,7 +3,7 @@
 /// <summary>
 /// Статус объявления в системе.
 /// </summary>
-public enum AdStatus
+public enum AdStatusDto
 {
     /// <summary> Черновик (не опубликовано).</summary>
     Draft = 0,

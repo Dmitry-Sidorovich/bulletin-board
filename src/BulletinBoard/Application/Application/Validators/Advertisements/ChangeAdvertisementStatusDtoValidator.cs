@@ -13,7 +13,7 @@ public class ChangeAdvertisementStatusDtoValidator : AbstractValidator<ChangeAdv
     /// </summary>
     public ChangeAdvertisementStatusDtoValidator()
     {
-        RuleFor(x => x.Status)
+        RuleFor(x => x.StatusDto)
             .IsInEnum().WithMessage("Некорректный статус объявления.");
     }
 }

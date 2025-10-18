@@ -93,6 +93,7 @@ public sealed class AdvertisementService : IAdvertisementService
         var advertisement = new Advertisement(
             dto.Title,
             dto.Description,
+            dto.Price,
             dto.CategoryId,
             dto.AuthorId,
             contact
@@ -126,7 +127,7 @@ public sealed class AdvertisementService : IAdvertisementService
         
         var advertisement = await GetAndValidateOwnershipAsync(id, "редактирования", cancellationToken);
         
-        advertisement.UpdateText(dto.Title, dto.Description);
+        advertisement.UpdateText(dto.Title, dto.Description, dto.Price);
         advertisement.ChangeCategory(dto.CategoryId);
         
         var contact = new Contact(
@@ -154,7 +155,7 @@ public sealed class AdvertisementService : IAdvertisementService
         
         var advertisement = await GetAndValidateOwnershipAsync(id, "изменения статуса", cancellationToken);
         
-        var newStatus = dto.Status.ToDomain();
+        var newStatus = dto.StatusDto.ToDomain();
         if (advertisement.Status == newStatus)
         {
             return true;
@@ -260,5 +261,13 @@ public sealed class AdvertisementService : IAdvertisementService
         CancellationToken cancellationToken = default)
     {
         return _advertisementReadRepository.GetByAuthorAsync(authorId, page, cancellationToken);
+    }
+    
+    /// <inheritdoc />
+    public Task<PagedResult<AdvertisementDto>> SearchAsync(
+        AdvertisementFilterDto filter, 
+        CancellationToken cancellationToken = default)
+    {
+        return _advertisementReadRepository.SearchAsync(filter, cancellationToken);
     }
 }

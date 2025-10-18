@@ -46,7 +46,7 @@ public class AuthService : IAuthService
         var existingUser = await _userRepository.GetByEmailAsync(dto.Email, cancellationToken);
         if (existingUser != null)
         {
-            throw new ValidationException("Email", "Пользователь с таким email уже существует.");
+            throw new ValidationException("Пользователь с таким email уже существует.");
         }
 
         // Хешируем пароль
@@ -73,13 +73,13 @@ public class AuthService : IAuthService
         var user = await _userRepository.GetByEmailAsync(dto.Email, cancellationToken);
         if (user == null)
         {
-            throw new ValidationException("Email", "Неверный email или пароль.");
+            throw new ValidationException("Неверный email или пароль.");
         }
 
         // Проверяем пароль
         if (!_passwordHasher.VerifyPassword(dto.Password, user.PasswordHash))
         {
-            throw new ValidationException("Password", "Неверный email или пароль.");
+            throw new ValidationException("Неверный email или пароль.");
         }
 
         // Генерируем токены
@@ -94,7 +94,7 @@ public class AuthService : IAuthService
         
         if (refreshToken == null || !refreshToken.IsActive)
         {
-            throw new ValidationException("RefreshToken", "Недействительный или истёкший refresh token.");
+            throw new ValidationException("Недействительный или истёкший refresh token.");
         }
 
         // Отзываем старый токен

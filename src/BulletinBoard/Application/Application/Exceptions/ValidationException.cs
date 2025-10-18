@@ -12,10 +12,21 @@ public class ValidationException : Exception
     public IDictionary<string, string[]> Errors { get; }
 
     /// <summary>
-    /// Создает исключение валидации с одной ошибкой.
+    /// Создает исключение валидации с общим сообщением.
+    /// Используется для простых случаев без привязки к конкретному полю.
     /// </summary>
-    public ValidationException(string field, string message)
-        : base("Произошла ошибка валидации.")
+    /// <param name="message">Сообщение об ошибке.</param>
+    public ValidationException(string message) : base(message)
+    {
+        Errors = new Dictionary<string, string[]>();
+    }
+    
+    /// <summary>
+    /// Создает исключение валидации для конкретного поля.
+    /// </summary>
+    /// <param name="field">Имя поля, в котором произошла ошибка.</param>
+    /// <param name="message">Сообщение об ошибке.</param>
+    public ValidationException(string field, string message) : base(message)
     {
         Errors = new Dictionary<string, string[]>
         {

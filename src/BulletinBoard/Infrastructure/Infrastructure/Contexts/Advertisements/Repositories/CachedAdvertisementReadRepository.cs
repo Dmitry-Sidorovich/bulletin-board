@@ -70,4 +70,14 @@ public class CachedAdvertisementReadRepository : IAdvertisementReadRepository
     {
         return _inner.GetByAuthorAsync(authorId, page, ct);
     }
+    
+    /// <summary>
+    /// Поиск объявлений с фильтрацией и сортировкой (НЕ кешируется).
+    /// </summary>
+    public Task<PagedResult<AdvertisementDto>> SearchAsync(
+        AdvertisementFilterDto filter,
+        CancellationToken cancellationToken = default)
+    {
+        return _inner.SearchAsync(filter, cancellationToken);
+    }
 }

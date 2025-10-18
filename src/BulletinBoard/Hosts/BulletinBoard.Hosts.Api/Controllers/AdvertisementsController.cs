@@ -122,7 +122,7 @@ public sealed class AdvertisementsController : ControllerBase
     /// <param name="request">Новый статус.</param>
     /// <param name="cancellationToken">Токен отмены.</param>
     /// <returns>204 при успехе, 404 если не найдено.</returns>
-    [HttpPatch("{id:guid}/status")]
+    [HttpPatch("{id:guid}/statusDto")]
     [Authorize]
     [Consumes("application/json")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -225,5 +225,20 @@ public sealed class AdvertisementsController : ControllerBase
         var result = await _service.GetByAuthorAsync(userId.Value, page, cancellationToken);
         return Ok(result);
 
+    }
+    
+    /// <summary>
+    /// Поиск объявлений с фильтрацией.
+    /// </summary>
+    /// <param name="filter">Параметры поиска.</param>
+    /// <param name="cancellationToken">Токен отмены операции.</param>
+    [HttpGet("search")]
+    [ProducesResponseType(typeof(PagedResult<AdvertisementDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<PagedResult<AdvertisementDto>>> Search(
+        [FromQuery] AdvertisementFilterDto filter,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await _service.SearchAsync(filter, cancellationToken);
+        return Ok(result);
     }
 }

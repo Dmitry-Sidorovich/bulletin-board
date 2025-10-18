@@ -95,4 +95,14 @@ public interface IAdvertisementService
         Guid authorId, 
         PageRequest page, 
         CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Выполняет поиск объявлений с фильтрацией и сортировкой.
+    /// </summary>
+    /// <param name="filter">Параметры фильтрации и сортировки.</param>
+    /// <param name="cancellationToken">Токен отмены операции.</param>
+    /// <returns>Пагинированный результат объявлений.</returns>
+    Task<PagedResult<AdvertisementDto>> SearchAsync(
+        AdvertisementFilterDto filter,
+        CancellationToken cancellationToken = default);
 }

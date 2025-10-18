@@ -15,7 +15,7 @@ public class RegisterDtoValidator : AbstractValidator<RegisterDto>
     {
         RuleFor(x => x.DisplayName)
             .NotEmpty().WithMessage("Имя обязательно.")
-            .Length(2, 50).WithMessage("Имя должно содержать от 2 до 50 символов.")
+            .Length(3, 50).WithMessage("Имя должно содержать от 2 до 50 символов.")
             .Matches(@"^[а-яА-ЯёЁa-zA-Z0-9\s\-]+$")
             .WithMessage("Имя содержит недопустимые символы.");
 

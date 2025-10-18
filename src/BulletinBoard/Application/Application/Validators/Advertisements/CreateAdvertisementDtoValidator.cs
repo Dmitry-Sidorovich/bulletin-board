@@ -22,6 +22,9 @@ public class CreateAdvertisementDtoValidator : AbstractValidator<CreateAdvertise
         RuleFor(x => x.Description)
             .MaximumLength(1000).WithMessage("Описание не может превышать 1000 символов.")
             .When(x => !string.IsNullOrEmpty(x.Description));
+        
+        RuleFor(x => x.Price)
+            .GreaterThanOrEqualTo(0).WithMessage("Цена не может быть отрицательной.");
 
         RuleFor(x => x.CategoryId)
             .NotEmpty().WithMessage("Категория обязательна.");

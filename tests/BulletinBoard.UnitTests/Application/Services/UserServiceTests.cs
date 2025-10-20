@@ -116,4 +116,19 @@ public class UserServiceTests
         // Assert
         await act.Should().ThrowAsync<NotFoundException>();
     }
+    
+    [Fact]
+    public async Task GetByIdAsync_WhenNotExists_ShouldReturnNull()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        _mockReadRepository.Setup(r => r.GetByIdAsync(userId, default))
+            .ReturnsAsync((UserDto?)null);
+
+        // Act
+        var result = await _service.GetByIdAsync(userId);
+
+        // Assert
+        result.Should().BeNull();
+    }
 }

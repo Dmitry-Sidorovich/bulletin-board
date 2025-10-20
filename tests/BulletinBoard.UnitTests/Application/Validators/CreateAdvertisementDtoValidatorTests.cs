@@ -18,7 +18,6 @@ public class CreateAdvertisementDtoValidatorTests
             Title = "Valid Title",
             Description = "Valid description",
             CategoryId = Guid.NewGuid(),
-            AuthorId = Guid.NewGuid(),
             Contact = new ContactDto
             {
                 Name = "John Doe",
@@ -45,7 +44,6 @@ public class CreateAdvertisementDtoValidatorTests
         {
             Title = invalidTitle!,
             CategoryId = Guid.NewGuid(),
-            AuthorId = Guid.NewGuid(),
             Contact = new ContactDto { Name = "John", Email = "john@test.com" }
         };
 
@@ -65,7 +63,6 @@ public class CreateAdvertisementDtoValidatorTests
         {
             Title = new string('A', 201), // MaxLength = 200
             CategoryId = Guid.NewGuid(),
-            AuthorId = Guid.NewGuid(),
             Contact = new ContactDto { Name = "John", Email = "john@test.com" }
         };
 
@@ -86,7 +83,6 @@ public class CreateAdvertisementDtoValidatorTests
             Title = "Valid Title",
             Description = new string('A', 1001), // MaxLength = 1000
             CategoryId = Guid.NewGuid(),
-            AuthorId = Guid.NewGuid(),
             Contact = new ContactDto { Name = "John", Email = "john@test.com" }
         };
 
@@ -106,7 +102,6 @@ public class CreateAdvertisementDtoValidatorTests
         {
             Title = "Valid Title",
             CategoryId = Guid.Empty,
-            AuthorId = Guid.NewGuid(),
             Contact = new ContactDto { Name = "John", Email = "john@test.com" }
         };
 
@@ -119,26 +114,6 @@ public class CreateAdvertisementDtoValidatorTests
     }
 
     [Fact]
-    public void Validate_WithEmptyAuthorId_ShouldFail()
-    {
-        // Arrange
-        var dto = new CreateAdvertisementDto
-        {
-            Title = "Valid Title",
-            CategoryId = Guid.NewGuid(),
-            AuthorId = Guid.Empty,
-            Contact = new ContactDto { Name = "John", Email = "john@test.com" }
-        };
-
-        // Act
-        var result = _validator.Validate(dto);
-
-        // Assert
-        result.IsValid.Should().BeFalse();
-        result.Errors.Should().Contain(e => e.PropertyName == nameof(dto.AuthorId));
-    }
-
-    [Fact]
     public void Validate_WithNullContact_ShouldFail()
     {
         // Arrange
@@ -146,7 +121,6 @@ public class CreateAdvertisementDtoValidatorTests
         {
             Title = "Valid Title",
             CategoryId = Guid.NewGuid(),
-            AuthorId = Guid.NewGuid(),
             Contact = null!
         };
 

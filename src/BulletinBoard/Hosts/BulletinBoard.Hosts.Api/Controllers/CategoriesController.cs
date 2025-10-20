@@ -50,6 +50,21 @@ public sealed class CategoriesController : ControllerBase
         var result = await _service.GetChildrenAsync(parentId, page, cancellationToken);
         return Ok(result);
     }
+    
+    /// <summary>
+    /// Возвращает категорию по идентификатору.
+    /// </summary>
+    /// <param name="id">Идентификатор категории.</param>
+    /// <param name="cancellationToken">Токен отмены.</param>
+    /// <returns>Категория или 404, если не найдена.</returns>
+    [HttpGet("{id:guid}")]
+    [ProducesResponseType(typeof(CategoryDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<CategoryDto>> GetById(Guid id, CancellationToken cancellationToken = default)
+    {
+        var category = await _service.GetByIdAsync(id, cancellationToken);
+        return category is not null ? Ok(category) : NotFound();
+    }
 
     /// <summary>
     /// Создаёт корневую категорию.

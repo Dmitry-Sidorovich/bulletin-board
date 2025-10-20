@@ -27,6 +27,7 @@ public sealed class AdvertisementsController : ControllerBase
         _service = service;
         _currentUserService = currentUserService;
     }
+
     /// <summary>
     /// Возвращает объявление по идентификатору.
     /// </summary>
@@ -63,6 +64,28 @@ public sealed class AdvertisementsController : ControllerBase
     }
 
     /// <summary>
+    /// Возвращает список всех объявлений с постраничным выводом.
+    /// </summary>
+    /// <param name="page">Параметры пагинации</param>
+    /// <param name="cancellationToken">Токен отмены</param>
+    /// <returns>Постраничный список объявлений</returns>
+    [HttpGet]
+    [ProducesResponseType(typeof(PagedResult<AdvertisementDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<PagedResult<AdvertisementDto>>> GetAdvertisements(
+        [FromQuery] PageRequest page,
+        CancellationToken cancellationToken = default)
+    {
+        var filter = new AdvertisementFilterDto
+        {
+            PageNumber = page.Page,
+            PageSize = page.PageSize
+        };
+
+        var result = await _service.SearchAsync(filter, cancellationToken);
+        return Ok(result);
+    }
+
+    /// <summary>
     /// Создаёт новое объявление.
     /// </summary>
     /// <param name="request">Данные для создания объявления.</param>
@@ -75,7 +98,8 @@ public sealed class AdvertisementsController : ControllerBase
     [ProducesResponseType(typeof(AdvertisementDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<AdvertisementDto>> Create([FromBody] CreateAdvertisementDto request, CancellationToken cancellationToken = default)
+    public async Task<ActionResult<AdvertisementDto>> Create([FromBody] CreateAdvertisementDto request,
+        CancellationToken cancellationToken = default)
     {
         var created = await _service.CreateAsync(request, cancellationToken);
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
@@ -97,7 +121,8 @@ public sealed class AdvertisementsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<AdvertisementDto>> Update(Guid id, [FromBody] UpdateAdvertisementDto request, CancellationToken cancellationToken = default)
+    public async Task<ActionResult<AdvertisementDto>> Update(Guid id, [FromBody] UpdateAdvertisementDto request,
+        CancellationToken cancellationToken = default)
     {
         var currentUserId = _currentUserService.GetCurrentUserId();
         if (currentUserId == null) return Unauthorized();
@@ -105,7 +130,7 @@ public sealed class AdvertisementsController : ControllerBase
         // Проверяем владельца ДО вызова сервиса
         var ad = await _service.GetByIdAsync(id, cancellationToken);
         if (ad == null) return NotFound();
-    
+
         if (!_currentUserService.IsOwnerOrAdmin(ad.AuthorId))
         {
             return Forbid();
@@ -128,9 +153,10 @@ public sealed class AdvertisementsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)] 
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> ChangeStatus(Guid id, [FromBody] ChangeAdvertisementStatusDto request, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> ChangeStatus(Guid id, [FromBody] ChangeAdvertisementStatusDto request,
+        CancellationToken cancellationToken = default)
     {
         var ok = await _service.ChangeStatusAsync(id, request, cancellationToken);
         return ok ? NoContent() : NotFound();
@@ -150,11 +176,10 @@ public sealed class AdvertisementsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken = default)
     {
-        
         var ok = await _service.DeleteAsync(id, cancellationToken);
         return ok ? NoContent() : NotFound();
     }
-    
+
     /// <summary>
     /// Прикрепить файл к объявлению.
     /// </summary>
@@ -202,7 +227,7 @@ public sealed class AdvertisementsController : ControllerBase
         var result = await _service.DetachFileAsync(id, fileId, cancellationToken);
         return result ? NoContent() : NotFound("Привязка не найдена.");
     }
-    
+
     /// <summary>
     /// Возвращает объявления текущего авторизованного пользователя.
     /// </summary>
@@ -219,14 +244,13 @@ public sealed class AdvertisementsController : ControllerBase
         {
             return Unauthorized();
         }
-        
+
         page.ThrowIfInvalid();
 
         var result = await _service.GetByAuthorAsync(userId.Value, page, cancellationToken);
         return Ok(result);
-
     }
-    
+
     /// <summary>
     /// Поиск объявлений с фильтрацией.
     /// </summary>

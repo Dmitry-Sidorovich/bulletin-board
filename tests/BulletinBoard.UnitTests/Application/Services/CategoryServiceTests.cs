@@ -153,4 +153,71 @@ public class CategoryServiceTests
         result.Should().BeFalse();
         _mockRepository.Verify(r => r.DeleteAsync(It.IsAny<Guid>(), default), Times.Never);
     }
+    
+    //new
+    [Fact]
+    public async Task GetByIdAsync_WhenExists_ShouldReturnCategory()
+    {
+        // Arrange
+        var categoryId = Guid.NewGuid();
+        var expectedDto = new CategoryDto { Id = categoryId, Name = "Electronics" };
+        
+        _mockReadRepository.Setup(r => r.GetByIdAsync(categoryId, default))
+            .ReturnsAsync(expectedDto);
+
+        // Act
+        var result = await _service.GetByIdAsync(categoryId);
+
+        // Assert
+        result.Should().NotBeNull();
+        result!.Id.Should().Be(categoryId);
+        result.Name.Should().Be("Electronics");
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_WhenNotExists_ShouldReturnNull()
+    {
+        // Arrange
+        var categoryId = Guid.NewGuid();
+        
+        _mockReadRepository.Setup(r => r.GetByIdAsync(categoryId, default))
+            .ReturnsAsync((CategoryDto?)null);
+
+        // Act
+        var result = await _service.GetByIdAsync(categoryId);
+
+        // Assert
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetChildrenAsync_ShouldReturnChildCategories()
+    {
+        // Arrange
+        var parentId = Guid.NewGuid();
+        var page = new PageRequest { Page = 1, PageSize = 10 };
+        
+        var expectedResult = new PagedResult<CategoryDto>
+        {
+            Items = new List<CategoryDto>
+            {
+                new() { Id = Guid.NewGuid(), Name = "Smartphones", ParentId = parentId },
+                new() { Id = Guid.NewGuid(), Name = "Laptops", ParentId = parentId }
+            },
+            TotalCount = 2,
+            Page = 1,
+            PageSize = 10
+        };
+        
+        _mockReadRepository.Setup(r => r.GetChildrenAsync(parentId, page, default))
+            .ReturnsAsync(expectedResult);
+
+        // Act
+        var result = await _service.GetChildrenAsync(parentId, page);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Items.Should().HaveCount(2);
+        result.Items.All(c => c.ParentId == parentId).Should().BeTrue();
+    }
 }

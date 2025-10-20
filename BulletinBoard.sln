@@ -29,6 +29,10 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{A0F1476E-2D8A-4D78-AA6A-4C394CCBDEED}"
 	ProjectSection(SolutionItems) = preProject
 		docker-compose.yml = docker-compose.yml
+		README.md = README.md
+		.gitignore = .gitignore
+		.env = .env
+		LICENSE = LICENSE
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BulletinBoard.Hosts.DbMigrator", "src\BulletinBoard\Hosts\BulletinBoard.Hosts.DbMigrator\BulletinBoard.Hosts.DbMigrator.csproj", "{65C5A314-3CE8-419C-BFE5-C9056495A1FE}"
@@ -36,6 +40,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{0AB3BF05-4346-4AA6-1389-037BE0695223}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BulletinBoard.UnitTests", "tests\BulletinBoard.UnitTests\BulletinBoard.UnitTests.csproj", "{191242A9-6214-46D2-B0EC-C657FE10B5A1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BulletinBoard.IntegrationTests", "tests\BulletinBoard.IntegrationTests\BulletinBoard.IntegrationTests.csproj", "{2F1CEAC2-F210-4FA5-917A-14DF32330B86}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -131,6 +137,18 @@ Global
 		{191242A9-6214-46D2-B0EC-C657FE10B5A1}.Release|x64.Build.0 = Release|Any CPU
 		{191242A9-6214-46D2-B0EC-C657FE10B5A1}.Release|x86.ActiveCfg = Release|Any CPU
 		{191242A9-6214-46D2-B0EC-C657FE10B5A1}.Release|x86.Build.0 = Release|Any CPU
+		{2F1CEAC2-F210-4FA5-917A-14DF32330B86}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2F1CEAC2-F210-4FA5-917A-14DF32330B86}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2F1CEAC2-F210-4FA5-917A-14DF32330B86}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{2F1CEAC2-F210-4FA5-917A-14DF32330B86}.Debug|x64.Build.0 = Debug|Any CPU
+		{2F1CEAC2-F210-4FA5-917A-14DF32330B86}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{2F1CEAC2-F210-4FA5-917A-14DF32330B86}.Debug|x86.Build.0 = Debug|Any CPU
+		{2F1CEAC2-F210-4FA5-917A-14DF32330B86}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2F1CEAC2-F210-4FA5-917A-14DF32330B86}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2F1CEAC2-F210-4FA5-917A-14DF32330B86}.Release|x64.ActiveCfg = Release|Any CPU
+		{2F1CEAC2-F210-4FA5-917A-14DF32330B86}.Release|x64.Build.0 = Release|Any CPU
+		{2F1CEAC2-F210-4FA5-917A-14DF32330B86}.Release|x86.ActiveCfg = Release|Any CPU
+		{2F1CEAC2-F210-4FA5-917A-14DF32330B86}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -150,5 +168,6 @@ Global
 		{A4644EB2-75ED-4969-B77C-CCAA79CA67B3} = {62018CED-F434-4A0E-A198-BEF4D2827905}
 		{65C5A314-3CE8-419C-BFE5-C9056495A1FE} = {62018CED-F434-4A0E-A198-BEF4D2827905}
 		{191242A9-6214-46D2-B0EC-C657FE10B5A1} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
+		{2F1CEAC2-F210-4FA5-917A-14DF32330B86} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 	EndGlobalSection
 EndGlobal

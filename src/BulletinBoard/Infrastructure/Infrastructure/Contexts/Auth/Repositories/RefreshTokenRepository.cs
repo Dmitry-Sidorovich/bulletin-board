@@ -25,7 +25,7 @@ public class RefreshTokenRepository : IRefreshTokenRepository
     public async Task<RefreshToken?> GetByTokenAsync(string token, CancellationToken cancellationToken = default)
     {
         return await _context.RefreshTokens
-            .Include(rt => rt.User)
+            //.Include(rt => rt.User)
             .FirstOrDefaultAsync(rt => rt.Token == token, cancellationToken);
     }
 

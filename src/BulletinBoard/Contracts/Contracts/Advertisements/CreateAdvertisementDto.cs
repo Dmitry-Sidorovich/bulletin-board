@@ -17,11 +17,6 @@ public sealed class CreateAdvertisementDto
     /// <summary> Категория (обязательна).</summary>
     public Guid CategoryId { get; init; }
 
-    /// <summary>
-    /// Автор объявления (обязателен).
-    /// </summary>
-    public Guid AuthorId { get; init; }
-
     /// <summary> Контактные данные — обязательны при создании.</summary>
     public ContactDto Contact { get; init; } = default!;
 }

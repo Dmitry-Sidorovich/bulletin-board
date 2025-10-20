@@ -39,12 +39,26 @@ public class AdvertisementFilterDto
     public int PageSize { get; set; } = 20;
 }
 
+/// <summary>
+/// Варианты сортировки объявлений.
+/// </summary>
 public enum AdvertisementSortBy
 {
-    CreatedAtDesc,
-    CreatedAtAsc,
-    PriceAsc,
-    PriceDesc,
-    TitleAsc,
-    TitleDesc
+    /// <summary>По дате создания (сначала новые).</summary>
+    CreatedAtDesc = 0,
+    
+    /// <summary>По дате создания (сначала старые).</summary>
+    CreatedAtAsc = 1,
+    
+    /// <summary>По цене (по возрастанию).</summary>
+    PriceAsc = 2,
+    
+    /// <summary>По цене (по убыванию).</summary>
+    PriceDesc = 3,
+    
+    /// <summary>По заголовку (A-Z, А-Я).</summary>
+    TitleAsc = 4,
+    
+    /// <summary>По заголовку (Z-A, Я-А).</summary>
+    TitleDesc = 5
 }

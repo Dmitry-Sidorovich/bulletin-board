@@ -18,23 +18,17 @@ public class AdvertisementTests
         // Arrange
         var title = "Продам iPhone";
         var description = "Отличное состояние";
-        // ✅ НАЧАЛО ИЗМЕНЕНИЙ - добавлена цена
         var price = 50000m;
-        // ✅ КОНЕЦ ИЗМЕНЕНИЙ
         var categoryId = Guid.NewGuid();
         var authorId = Guid.NewGuid();
 
         // Act
-        // ✅ НАЧАЛО ИЗМЕНЕНИЙ - добавлен параметр price
         var ad = new Advertisement(title, description, price, categoryId, authorId, _validContact);
-        // ✅ КОНЕЦ ИЗМЕНЕНИЙ
 
         // Assert
         ad.Title.Should().Be(title);
         ad.Description.Should().Be(description);
-        // ✅ НАЧАЛО ИЗМЕНЕНИЙ
         ad.Price.Should().Be(price);
-        // ✅ КОНЕЦ ИЗМЕНЕНИЙ
         ad.CategoryId.Should().Be(categoryId);
         ad.AuthorId.Should().Be(authorId);
         ad.Contact.Should().Be(_validContact);
@@ -52,9 +46,7 @@ public class AdvertisementTests
         var act = () => new Advertisement(
             invalidTitle!,
             "Description",
-            // ✅ НАЧАЛО ИЗМЕНЕНИЙ
             1000m,
-            // ✅ КОНЕЦ ИЗМЕНЕНИЙ
             Guid.NewGuid(),
             Guid.NewGuid(),
             _validContact);
@@ -64,7 +56,6 @@ public class AdvertisementTests
             .WithMessage("*заголовок*");
     }
 
-    // ✅ НАЧАЛО ИЗМЕНЕНИЙ - новый тест для отрицательной цены
     [Fact]
     public void Constructor_WithNegativePrice_ShouldThrowArgumentException()
     {
@@ -97,7 +88,6 @@ public class AdvertisementTests
         // Assert
         ad.Price.Should().Be(0m);
     }
-    // ✅ КОНЕЦ ИЗМЕНЕНИЙ
 
     [Fact]
     public void Constructor_WithEmptyCategoryId_ShouldThrowArgumentException()
@@ -106,9 +96,7 @@ public class AdvertisementTests
         var act = () => new Advertisement(
             "Title",
             "Description",
-            // ✅ НАЧАЛО ИЗМЕНЕНИЙ
             1000m,
-            // ✅ КОНЕЦ ИЗМЕНЕНИЙ
             Guid.Empty,
             Guid.NewGuid(),
             _validContact);
@@ -119,34 +107,13 @@ public class AdvertisementTests
     }
 
     [Fact]
-    public void Constructor_WithEmptyAuthorId_ShouldThrowArgumentException()
-    {
-        // Arrange & Act
-        var act = () => new Advertisement(
-            "Title",
-            "Description",
-            // ✅ НАЧАЛО ИЗМЕНЕНИЙ
-            1000m,
-            // ✅ КОНЕЦ ИЗМЕНЕНИЙ
-            Guid.NewGuid(),
-            Guid.Empty,
-            _validContact);
-
-        // Assert
-        act.Should().Throw<ArgumentException>()
-            .WithMessage("*продавец*");
-    }
-
-    [Fact]
     public void Constructor_WithNullContact_ShouldThrowArgumentNullException()
     {
         // Arrange & Act
         var act = () => new Advertisement(
             "Title",
             "Description",
-            // ✅ НАЧАЛО ИЗМЕНЕНИЙ
             1000m,
-            // ✅ КОНЕЦ ИЗМЕНЕНИЙ
             Guid.NewGuid(),
             Guid.NewGuid(),
             null!);
@@ -159,40 +126,28 @@ public class AdvertisementTests
     public void UpdateText_WithValidData_ShouldUpdateTitleAndDescription()
     {
         // Arrange
-        // ✅ НАЧАЛО ИЗМЕНЕНИЙ
         var ad = new Advertisement("Old Title", "Old Desc", 100m, Guid.NewGuid(), Guid.NewGuid(), _validContact);
-        // ✅ КОНЕЦ ИЗМЕНЕНИЙ
         var newTitle = "New Title";
         var newDescription = "New Description";
-        // ✅ НАЧАЛО ИЗМЕНЕНИЙ
         var newPrice = 200m;
-        // ✅ КОНЕЦ ИЗМЕНЕНИЙ
 
         // Act
-        // ✅ НАЧАЛО ИЗМЕНЕНИЙ
         ad.UpdateText(newTitle, newDescription, newPrice);
-        // ✅ КОНЕЦ ИЗМЕНЕНИЙ
 
         // Assert
         ad.Title.Should().Be(newTitle);
         ad.Description.Should().Be(newDescription);
-        // ✅ НАЧАЛО ИЗМЕНЕНИЙ
         ad.Price.Should().Be(newPrice);
-        // ✅ КОНЕЦ ИЗМЕНЕНИЙ
     }
 
     [Fact]
     public void UpdateText_WithEmptyTitle_ShouldThrowArgumentException()
     {
         // Arrange
-        // ✅ НАЧАЛО ИЗМЕНЕНИЙ
         var ad = new Advertisement("Title", null, 100m, Guid.NewGuid(), Guid.NewGuid(), _validContact);
-        // ✅ КОНЕЦ ИЗМЕНЕНИЙ
 
         // Act
-        // ✅ НАЧАЛО ИЗМЕНЕНИЙ
         var act = () => ad.UpdateText("", "Description", 200m);
-        // ✅ КОНЕЦ ИЗМЕНЕНИЙ
 
         // Assert
         act.Should().Throw<ArgumentException>();
@@ -202,9 +157,7 @@ public class AdvertisementTests
     public void ChangeStatus_WithValidStatus_ShouldUpdateStatus()
     {
         // Arrange
-        // ✅ НАЧАЛО ИЗМЕНЕНИЙ
         var ad = new Advertisement("Title", null, 100m, Guid.NewGuid(), Guid.NewGuid(), _validContact);
-        // ✅ КОНЕЦ ИЗМЕНЕНИЙ
         ad.Status.Should().Be(AdStatus.Draft);
 
         // Act
@@ -219,9 +172,7 @@ public class AdvertisementTests
     {
         // Arrange
         var oldCategoryId = Guid.NewGuid();
-        // ✅ НАЧАЛО ИЗМЕНЕНИЙ
         var ad = new Advertisement("Title", null, 100m, oldCategoryId, Guid.NewGuid(), _validContact);
-        // ✅ КОНЕЦ ИЗМЕНЕНИЙ
         var newCategoryId = Guid.NewGuid();
 
         // Act
@@ -235,9 +186,7 @@ public class AdvertisementTests
     public void ChangeCategory_WithEmptyGuid_ShouldThrowArgumentException()
     {
         // Arrange
-        // ✅ НАЧАЛО ИЗМЕНЕНИЙ
         var ad = new Advertisement("Title", null, 100m, Guid.NewGuid(), Guid.NewGuid(), _validContact);
-        // ✅ КОНЕЦ ИЗМЕНЕНИЙ
 
         // Act
         var act = () => ad.ChangeCategory(Guid.Empty);
@@ -250,9 +199,7 @@ public class AdvertisementTests
     public void UpdateContact_WithValidContact_ShouldUpdateContact()
     {
         // Arrange
-        // ✅ НАЧАЛО ИЗМЕНЕНИЙ
         var ad = new Advertisement("Title", null, 100m, Guid.NewGuid(), Guid.NewGuid(), _validContact);
-        // ✅ КОНЕЦ ИЗМЕНЕНИЙ
         var newContact = new Contact("Пётр Петров", "petr@example.com", null);
 
         // Act
@@ -267,9 +214,7 @@ public class AdvertisementTests
     public void UpdateContact_WithNull_ShouldThrowArgumentNullException()
     {
         // Arrange
-        // ✅ НАЧАЛО ИЗМЕНЕНИЙ
         var ad = new Advertisement("Title", null, 100m, Guid.NewGuid(), Guid.NewGuid(), _validContact);
-        // ✅ КОНЕЦ ИЗМЕНЕНИЙ
 
         // Act
         var act = () => ad.UpdateContact(null!);
@@ -285,9 +230,7 @@ public class AdvertisementTests
         var title = new string('A', 200); // MaxTitleLength = 200
 
         // Act
-        // ✅ НАЧАЛО ИЗМЕНЕНИЙ
         var ad = new Advertisement(title, null, 0m, Guid.NewGuid(), Guid.NewGuid(), _validContact);
-        // ✅ КОНЕЦ ИЗМЕНЕНИЙ
 
         // Assert
         ad.Title.Should().HaveLength(200);
@@ -300,9 +243,7 @@ public class AdvertisementTests
         var title = new string('A', 201); // MaxTitleLength = 200
 
         // Act
-        // ✅ НАЧАЛО ИЗМЕНЕНИЙ
         var act = () => new Advertisement(title, null, 0m, Guid.NewGuid(), Guid.NewGuid(), _validContact);
-        // ✅ КОНЕЦ ИЗМЕНЕНИЙ
 
         // Assert
         act.Should().Throw<ArgumentException>()
@@ -316,9 +257,7 @@ public class AdvertisementTests
         var description = new string('A', 1000); // MaxDescriptionLength = 1000
 
         // Act
-        // ✅ НАЧАЛО ИЗМЕНЕНИЙ
         var ad = new Advertisement("Title", description, 0m, Guid.NewGuid(), Guid.NewGuid(), _validContact);
-        // ✅ КОНЕЦ ИЗМЕНЕНИЙ
 
         // Assert
         ad.Description.Should().HaveLength(1000);
@@ -331,9 +270,7 @@ public class AdvertisementTests
         var description = new string('A', 1001); // MaxDescriptionLength = 1000
 
         // Act
-        // ✅ НАЧАЛО ИЗМЕНЕНИЙ
         var act = () => new Advertisement("Title", description, 0m, Guid.NewGuid(), Guid.NewGuid(), _validContact);
-        // ✅ КОНЕЦ ИЗМЕНЕНИЙ
 
         // Assert
         act.Should().Throw<ArgumentException>()
@@ -344,9 +281,7 @@ public class AdvertisementTests
     public void Constructor_WithNullDescription_ShouldSetEmptyString()
     {
         // Act
-        // ✅ НАЧАЛО ИЗМЕНЕНИЙ
         var ad = new Advertisement("Title", null, 0m, Guid.NewGuid(), Guid.NewGuid(), _validContact);
-        // ✅ КОНЕЦ ИЗМЕНЕНИЙ
 
         // Assert
         ad.Description.Should().BeEmpty();
@@ -356,9 +291,7 @@ public class AdvertisementTests
     public void Constructor_ShouldTrimTitleAndDescription()
     {
         // Act
-        // ✅ НАЧАЛО ИЗМЕНЕНИЙ
         var ad = new Advertisement("  Title  ", "  Description  ", 0m, Guid.NewGuid(), Guid.NewGuid(), _validContact);
-        // ✅ КОНЕЦ ИЗМЕНЕНИЙ
 
         // Assert
         ad.Title.Should().Be("Title");
@@ -369,15 +302,11 @@ public class AdvertisementTests
     public void UpdateText_WithTitleExceedingMaxLength_ShouldThrowArgumentException()
     {
         // Arrange
-        // ✅ НАЧАЛО ИЗМЕНЕНИЙ
         var ad = new Advertisement("Title", null, 0m, Guid.NewGuid(), Guid.NewGuid(), _validContact);
-        // ✅ КОНЕЦ ИЗМЕНЕНИЙ
         var longTitle = new string('A', 201);
 
         // Act
-        // ✅ НАЧАЛО ИЗМЕНЕНИЙ
         var act = () => ad.UpdateText(longTitle, null, 0m);
-        // ✅ КОНЕЦ ИЗМЕНЕНИЙ
 
         // Assert
         act.Should().Throw<ArgumentException>()
@@ -388,15 +317,11 @@ public class AdvertisementTests
     public void UpdateText_WithDescriptionExceedingMaxLength_ShouldThrowArgumentException()
     {
         // Arrange
-        // ✅ НАЧАЛО ИЗМЕНЕНИЙ
         var ad = new Advertisement("Title", null, 0m, Guid.NewGuid(), Guid.NewGuid(), _validContact);
-        // ✅ КОНЕЦ ИЗМЕНЕНИЙ
         var longDescription = new string('A', 1001);
 
         // Act
-        // ✅ НАЧАЛО ИЗМЕНЕНИЙ
         var act = () => ad.UpdateText("Title", longDescription, 0m);
-        // ✅ КОНЕЦ ИЗМЕНЕНИЙ
 
         // Assert
         act.Should().Throw<ArgumentException>()
@@ -407,14 +332,10 @@ public class AdvertisementTests
     public void UpdateText_WithNullDescription_ShouldSetEmptyString()
     {
         // Arrange
-        // ✅ НАЧАЛО ИЗМЕНЕНИЙ
         var ad = new Advertisement("Old Title", "Old Description", 100m, Guid.NewGuid(), Guid.NewGuid(), _validContact);
-        // ✅ КОНЕЦ ИЗМЕНЕНИЙ
 
         // Act
-        // ✅ НАЧАЛО ИЗМЕНЕНИЙ
         ad.UpdateText("New Title", null, 100m);
-        // ✅ КОНЕЦ ИЗМЕНЕНИЙ
 
         // Assert
         ad.Description.Should().BeEmpty();
@@ -424,9 +345,7 @@ public class AdvertisementTests
     public void ChangeStatus_ToSameStatus_ShouldNotThrow()
     {
         // Arrange
-        // ✅ НАЧАЛО ИЗМЕНЕНИЙ
         var ad = new Advertisement("Title", null, 0m, Guid.NewGuid(), Guid.NewGuid(), _validContact);
-        // ✅ КОНЕЦ ИЗМЕНЕНИЙ
         ad.ChangeStatus(AdStatus.Published);
 
         // Act

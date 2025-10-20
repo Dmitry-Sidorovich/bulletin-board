@@ -75,13 +75,15 @@ public sealed class AdvertisementService : IAdvertisementService
         {
             throw new ArgumentException("CategoryId is required.", nameof(dto));
         }
-        if (dto.AuthorId == Guid.Empty)
-        {
-            throw new ArgumentException("AuthorId is required.", nameof(dto));
-        }
         if (dto.Contact == null)
         {
             throw new ArgumentException("Contact is required.", nameof(dto));
+        }
+        
+        var currentUserId = _currentUserService.GetCurrentUserId();
+        if (currentUserId == null)
+        {
+            throw new UnauthorizedAccessException();
         }
         
         var contact = new Contact(
@@ -95,7 +97,7 @@ public sealed class AdvertisementService : IAdvertisementService
             dto.Description,
             dto.Price,
             dto.CategoryId,
-            dto.AuthorId,
+            currentUserId.Value,
             contact
         );
         

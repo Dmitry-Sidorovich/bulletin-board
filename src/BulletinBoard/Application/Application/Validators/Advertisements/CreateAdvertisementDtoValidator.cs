@@ -28,10 +28,7 @@ public class CreateAdvertisementDtoValidator : AbstractValidator<CreateAdvertise
 
         RuleFor(x => x.CategoryId)
             .NotEmpty().WithMessage("Категория обязательна.");
-
-        RuleFor(x => x.AuthorId)
-            .NotEmpty().WithMessage("Автор обязателен.");
-
+        
         RuleFor(x => x.Contact)
             .NotNull().WithMessage("Контактные данные обязательны.")
             .SetValidator(new ContactDtoValidator());

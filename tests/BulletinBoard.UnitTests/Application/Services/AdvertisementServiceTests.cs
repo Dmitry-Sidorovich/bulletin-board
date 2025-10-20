@@ -81,30 +81,37 @@ public class AdvertisementServiceTests
     public async Task CreateAsync_WithValidData_ShouldCreateAdvertisement()
     {
         // Arrange
+        var currentUserId = Guid.NewGuid(); // <-- 1. Определяем тестовый ID
+        _mockCurrentUserService.Setup(s => s.GetCurrentUserId()).Returns(currentUserId); // <-- 2. Настраиваем мок
+
         var createDto = new CreateAdvertisementDto
         {
             Title = "Test Ad",
             Description = "Description",
-            // ✅ НАЧАЛО ИЗМЕНЕНИЙ
             Price = 1000m,
-            // ✅ КОНЕЦ ИЗМЕНЕНИЙ
             CategoryId = Guid.NewGuid(),
-            AuthorId = Guid.NewGuid(),
             Contact = new ContactDto { Name = "John", Email = "john@test.com", Phone = null }
         };
 
-        var expectedDto = new AdvertisementDto { Id = Guid.NewGuid(), Title = createDto.Title };
+        Advertisement? capturedAd = null;
+        _mockRepository
+            .Setup(r => r.AddAsync(It.IsAny<Advertisement>(), default))
+            .Callback<Advertisement, CancellationToken>((ad, ct) => capturedAd = ad);
+
         _mockMapper.Setup(m => m.Map<AdvertisementDto>(It.IsAny<Advertisement>()))
-            .Returns(expectedDto);
+            .Returns(
+                (Advertisement ad) => new AdvertisementDto { Id = ad.Id, Title = ad.Title, AuthorId = ad.AuthorId });
 
         // Act
         var result = await _service.CreateAsync(createDto);
 
         // Assert
         result.Should().NotBeNull();
-        result.Title.Should().Be(createDto.Title);
         _mockRepository.Verify(r => r.AddAsync(It.IsAny<Advertisement>(), default), Times.Once);
         _mockUnitOfWork.Verify(u => u.SaveChangesAsync(default), Times.Once);
+
+        capturedAd.Should().NotBeNull();
+        capturedAd!.AuthorId.Should().Be(currentUserId); // <-- 3. Теперь эта проверка тоже будет работать
     }
 
     [Fact]
@@ -127,11 +134,8 @@ public class AdvertisementServiceTests
         var createDto = new CreateAdvertisementDto
         {
             Title = invalidTitle!,
-            // ✅ НАЧАЛО ИЗМЕНЕНИЙ
             Price = 1000m,
-            // ✅ КОНЕЦ ИЗМЕНЕНИЙ
             CategoryId = Guid.NewGuid(),
-            AuthorId = Guid.NewGuid(),
             Contact = new ContactDto { Name = "John", Email = "john@test.com" }
         };
 
@@ -149,18 +153,14 @@ public class AdvertisementServiceTests
         // Arrange
         var adId = Guid.NewGuid();
         var authorId = Guid.NewGuid();
-        // ✅ НАЧАЛО ИЗМЕНЕНИЙ - добавлен параметр price
         var existingAd = new Advertisement("Old Title", null, 100m, Guid.NewGuid(), authorId,
             new Contact("John", "john@test.com"));
-        // ✅ КОНЕЦ ИЗМЕНЕНИЙ
 
         var updateDto = new UpdateAdvertisementDto
         {
             Title = "New Title",
             Description = "New Description",
-            // ✅ НАЧАЛО ИЗМЕНЕНИЙ
             Price = 200m,
-            // ✅ КОНЕЦ ИЗМЕНЕНИЙ
             CategoryId = Guid.NewGuid(),
             Contact = new ContactDto { Name = "Jane", Email = "jane@test.com" }
         };
@@ -189,17 +189,13 @@ public class AdvertisementServiceTests
         // Arrange
         var adId = Guid.NewGuid();
         var authorId = Guid.NewGuid();
-        // ✅ НАЧАЛО ИЗМЕНЕНИЙ
         var existingAd = new Advertisement("Title", null, 100m, Guid.NewGuid(), authorId,
             new Contact("John", "john@test.com"));
-        // ✅ КОНЕЦ ИЗМЕНЕНИЙ
 
         var updateDto = new UpdateAdvertisementDto
         {
             Title = "New Title",
-            // ✅ НАЧАЛО ИЗМЕНЕНИЙ
             Price = 200m,
-            // ✅ КОНЕЦ ИЗМЕНЕНИЙ
             CategoryId = Guid.NewGuid(),
             Contact = new ContactDto { Name = "Jane", Email = "jane@test.com" }
         };
@@ -224,9 +220,7 @@ public class AdvertisementServiceTests
         var updateDto = new UpdateAdvertisementDto
         {
             Title = "New Title",
-            // ✅ НАЧАЛО ИЗМЕНЕНИЙ
             Price = 200m,
-            // ✅ КОНЕЦ ИЗМЕНЕНИЙ
             CategoryId = Guid.NewGuid(),
             Contact = new ContactDto { Name = "Jane", Email = "jane@test.com" }
         };
@@ -246,10 +240,8 @@ public class AdvertisementServiceTests
     {
         // Arrange
         var adId = Guid.NewGuid();
-        // ✅ НАЧАЛО ИЗМЕНЕНИЙ
         var existingAd = new Advertisement("Title", null, 100m, Guid.NewGuid(), Guid.NewGuid(),
             new Contact("John", "john@test.com"));
-        // ✅ КОНЕЦ ИЗМЕНЕНИЙ
 
         _mockRepository.Setup(r => r.GetByIdAsync(adId, default))
             .ReturnsAsync(existingAd);
@@ -286,10 +278,8 @@ public class AdvertisementServiceTests
         // Arrange
         var adId = Guid.NewGuid();
         var authorId = Guid.NewGuid();
-        // ✅ НАЧАЛО ИЗМЕНЕНИЙ
         var existingAd = new Advertisement("Title", null, 100m, Guid.NewGuid(), authorId,
             new Contact("John", "john@test.com"));
-        // ✅ КОНЕЦ ИЗМЕНЕНИЙ
 
         var statusDto = new ChangeAdvertisementStatusDto { StatusDto = AdStatusDto.Published };
 
@@ -314,10 +304,8 @@ public class AdvertisementServiceTests
         var adId = Guid.NewGuid();
         var fileId = Guid.NewGuid();
         var authorId = Guid.NewGuid();
-        // ✅ НАЧАЛО ИЗМЕНЕНИЙ
         var existingAd = new Advertisement("Title", null, 100m, Guid.NewGuid(), authorId,
             new Contact("John", "john@test.com"));
-        // ✅ КОНЕЦ ИЗМЕНЕНИЙ
 
         _mockFileRepository.Setup(r => r.AdvertisementExistsAsync(adId, default))
             .ReturnsAsync(true);
@@ -340,7 +328,7 @@ public class AdvertisementServiceTests
         _mockFileRepository.Verify(r => r.AddAsync(It.IsAny<AdvertisementFile>(), default), Times.Once);
         _mockUnitOfWork.Verify(u => u.SaveChangesAsync(default), Times.Once);
     }
-    
+
     [Fact]
     public async Task GetByCategoryAsync_ShouldReturnPagedResult()
     {
@@ -406,11 +394,10 @@ public class AdvertisementServiceTests
         // Arrange
         var adId = Guid.NewGuid();
         var authorId = Guid.NewGuid();
-        // ✅ НАЧАЛО ИЗМЕНЕНИЙ
+
         var existingAd = new Advertisement("Title", null, 100m, Guid.NewGuid(), authorId,
             new Contact("John", "john@test.com"));
-        existingAd.ChangeStatus(AdStatus.Published); // ✅ Используем AdStatus, а не AdStatusDto
-        // ✅ КОНЕЦ ИЗМЕНЕНИЙ
+        existingAd.ChangeStatus(AdStatus.Published);
 
         var statusDto = new ChangeAdvertisementStatusDto { StatusDto = AdStatusDto.Published };
 
@@ -434,10 +421,8 @@ public class AdvertisementServiceTests
         var adId = Guid.NewGuid();
         var fileId = Guid.NewGuid();
         var authorId = Guid.NewGuid();
-        // ✅ НАЧАЛО ИЗМЕНЕНИЙ
         var existingAd = new Advertisement("Title", null, 100m, Guid.NewGuid(), authorId,
             new Contact("John", "john@test.com"));
-        // ✅ КОНЕЦ ИЗМЕНЕНИЙ
 
         _mockRepository.Setup(r => r.GetByIdAsync(adId, default))
             .ReturnsAsync(existingAd);
@@ -461,10 +446,8 @@ public class AdvertisementServiceTests
         var adId = Guid.NewGuid();
         var fileId = Guid.NewGuid();
         var authorId = Guid.NewGuid();
-        // ✅ НАЧАЛО ИЗМЕНЕНИЙ
         var existingAd = new Advertisement("Title", null, 100m, Guid.NewGuid(), authorId,
             new Contact("John", "john@test.com"));
-        // ✅ КОНЕЦ ИЗМЕНЕНИЙ
 
         _mockRepository.Setup(r => r.GetByIdAsync(adId, default))
             .ReturnsAsync(existingAd);
@@ -504,10 +487,8 @@ public class AdvertisementServiceTests
         var adId = Guid.NewGuid();
         var fileId = Guid.NewGuid();
         var authorId = Guid.NewGuid();
-        // ✅ НАЧАЛО ИЗМЕНЕНИЙ
         var existingAd = new Advertisement("Title", null, 100m, Guid.NewGuid(), authorId,
             new Contact("John", "john@test.com"));
-        // ✅ КОНЕЦ ИЗМЕНЕНИЙ
 
         _mockFileRepository.Setup(r => r.AdvertisementExistsAsync(adId, default))
             .ReturnsAsync(true);
@@ -532,10 +513,8 @@ public class AdvertisementServiceTests
         var adId = Guid.NewGuid();
         var fileId = Guid.NewGuid();
         var authorId = Guid.NewGuid();
-        // ✅ НАЧАЛО ИЗМЕНЕНИЙ
         var existingAd = new Advertisement("Title", null, 100m, Guid.NewGuid(), authorId,
             new Contact("John", "john@test.com"));
-        // ✅ КОНЕЦ ИЗМЕНЕНИЙ
 
         _mockFileRepository.Setup(r => r.AdvertisementExistsAsync(adId, default))
             .ReturnsAsync(true);
@@ -554,5 +533,84 @@ public class AdvertisementServiceTests
         // Assert
         result.Should().BeTrue();
         _mockFileRepository.Verify(r => r.AddAsync(It.IsAny<AdvertisementFile>(), default), Times.Never);
+    }
+
+    // new
+    [Fact]
+    public async Task SearchAsync_WithEmptyFilter_ShouldReturnPagedResult()
+    {
+        // Arrange
+        var filter = new AdvertisementFilterDto { PageNumber = 1, PageSize = 10 };
+        var expectedResult = new PagedResult<AdvertisementDto>
+        {
+            Items = new List<AdvertisementDto>
+            {
+                new() { Id = Guid.NewGuid(), Title = "Ad 1" },
+                new() { Id = Guid.NewGuid(), Title = "Ad 2" }
+            },
+            TotalCount = 2,
+            Page = 1,
+            PageSize = 10
+        };
+
+        _mockReadRepository.Setup(r => r.SearchAsync(
+                It.IsAny<AdvertisementFilterDto>(),
+                default))
+            .ReturnsAsync(expectedResult);
+
+        // Act
+        var result = await _service.SearchAsync(filter);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Items.Should().HaveCount(2);
+        result.TotalCount.Should().Be(2);
+        _mockReadRepository.Verify(r => r.SearchAsync(
+                It.Is<AdvertisementFilterDto>(f =>
+                    f.PageNumber == 1 && f.PageSize == 10),
+                default),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task SearchAsync_WithFilters_ShouldPassFiltersToRepository()
+    {
+        // Arrange
+        var filter = new AdvertisementFilterDto
+        {
+            SearchQuery = "iPhone",
+            MinPrice = 10000m,
+            MaxPrice = 50000m,
+            CategoryId = Guid.NewGuid(),
+            Status = AdStatusDto.Published,
+            PageNumber = 1,
+            PageSize = 10
+        };
+
+        var expectedResult = new PagedResult<AdvertisementDto>
+        {
+            Items = new List<AdvertisementDto>(),
+            TotalCount = 0,
+            Page = 1,
+            PageSize = 10
+        };
+
+        _mockReadRepository.Setup(r => r.SearchAsync(filter, default))
+            .ReturnsAsync(expectedResult);
+
+        // Act
+        var result = await _service.SearchAsync(filter);
+
+        // Assert
+        result.Should().NotBeNull();
+        _mockReadRepository.Verify(r => r.SearchAsync(
+                It.Is<AdvertisementFilterDto>(f =>
+                    f.SearchQuery == "iPhone" &&
+                    f.MinPrice == 10000m &&
+                    f.MaxPrice == 50000m &&
+                    f.CategoryId == filter.CategoryId &&
+                    f.Status == AdStatusDto.Published),
+                default),
+            Times.Once);
     }
 }

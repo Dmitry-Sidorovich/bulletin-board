@@ -4,6 +4,7 @@ using BulletinBoard.Application.ComponentRegistrar;
 using BulletinBoard.Application.Validators.Advertisements;
 using BulletinBoard.Hosts.Api.Validation;
 using BulletinBoard.Infrastructure.ComponentRegistrar;
+using BulletinBoard.Infrastructure.Contexts.Auth.Options;
 using BulletinBoard.Infrastructure.Middlewares;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -12,11 +13,11 @@ using Microsoft.OpenApi.Models;
 using Serilog;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
 
-Log.Logger = new LoggerConfiguration()
-    .WriteTo.Console()
-    .CreateBootstrapLogger();
-
-Log.Information("Starting BulletinBoard API...");
+// Log.Logger = new LoggerConfiguration()
+//     .WriteTo.Console()
+//     .CreateBootstrapLogger();
+//
+// Log.Information("Starting BulletinBoard API...");
 
 try
 {
@@ -64,6 +65,8 @@ try
 
                 return accountAge.TotalMinutes>= 1;
             }));
+    
+    builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
 
     builder.Services.AddValidatorsFromAssemblyContaining<CreateAdvertisementDtoValidator>();
     builder.Services.AddFluentValidationAutoValidation(configuration =>
@@ -132,8 +135,15 @@ try
 catch (Exception ex)
 {
     Log.Fatal(ex, "Application terminated unexpectedly");
+    throw;
 }
 finally
 {
     Log.CloseAndFlush();
+}
+
+// ✅ Для интеграционных тестов
+namespace BulletinBoard.Hosts.Api
+{
+    public partial class Program { }
 }

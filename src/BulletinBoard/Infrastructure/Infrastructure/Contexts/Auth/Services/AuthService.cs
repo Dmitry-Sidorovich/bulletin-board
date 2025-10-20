@@ -4,7 +4,9 @@ using BulletinBoard.Application.Contexts.Users;
 using BulletinBoard.Application.Exceptions;
 using BulletinBoard.Contracts.Auth;
 using BulletinBoard.Domain.Entities;
+using BulletinBoard.Infrastructure.Contexts.Auth.Options;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 
 namespace BulletinBoard.Infrastructure.Contexts.Auth.Services;
 
@@ -18,7 +20,8 @@ public class AuthService : IAuthService
     private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtTokenService _jwtTokenService;
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IConfiguration _configuration;
+    //private readonly IConfiguration _configuration;
+    private readonly JwtOptions _jwtOptions;
 
     /// <summary>
     /// Инициализирует сервис аутентификации.
@@ -29,14 +32,16 @@ public class AuthService : IAuthService
         IPasswordHasher passwordHasher,
         IJwtTokenService jwtTokenService,
         IUnitOfWork unitOfWork,
-        IConfiguration configuration)
+        //IConfiguration configuration,
+        IOptions<JwtOptions> jwtOptions)
     {
         _userRepository = userRepository;
         _refreshTokenRepository = refreshTokenRepository;
         _passwordHasher = passwordHasher;
         _jwtTokenService = jwtTokenService;
         _unitOfWork = unitOfWork;
-        _configuration = configuration;
+        //_configuration = configuration;
+        _jwtOptions = jwtOptions.Value ?? new JwtOptions();
     }
 
     /// <inheritdoc />
@@ -99,10 +104,17 @@ public class AuthService : IAuthService
 
         // Отзываем старый токен
         refreshToken.Revoke();
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        
+        //await _unitOfWork.SaveChangesAsync(cancellationToken);
+        
+        var user = await _userRepository.GetByIdAsync(refreshToken.UserId, cancellationToken);
+        if (user is null)
+        {
+            throw new NotFoundException("User", "Пользователь для refresh-токена не найден.");
+        }
 
         // Генерируем новые токены
-        return await GenerateTokenResponseAsync(refreshToken.User, cancellationToken);
+        return await GenerateTokenResponseAsync(user, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -127,12 +139,18 @@ public class AuthService : IAuthService
 
         // Генерируем refresh token
         var refreshTokenValue = _jwtTokenService.GenerateRefreshToken();
-        var refreshTokenExpirationDays = int.Parse(_configuration["Jwt:RefreshTokenExpirationDays"]!);
+        
+        //var refreshTokenExpirationDays = int.Parse(_configuration["Jwt:RefreshTokenExpirationDays"]!);
+        //
+        // var jwt = _configuration.GetSection("Jwt");
+        // var refreshDays   = jwt.GetValue<int?>("RefreshTokenExpirationDays")   ?? 7;   // CHANGED
+        // var accessMinutes = jwt.GetValue<int?>("AccessTokenExpirationMinutes") ?? 60;  // CHANGED
         
         var refreshToken = new RefreshToken(
             userId: user.Id,
             token: refreshTokenValue,
-            expiresAt: DateTimeOffset.UtcNow.AddDays(refreshTokenExpirationDays));
+            //expiresAt: DateTimeOffset.UtcNow.AddDays(refreshDays));
+            expiresAt: DateTimeOffset.UtcNow.AddDays(_jwtOptions.RefreshTokenExpirationDays));
 
         await _refreshTokenRepository.AddAsync(refreshToken, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -142,7 +160,8 @@ public class AuthService : IAuthService
         {
             AccessToken = accessToken,
             RefreshToken = refreshTokenValue,
-            ExpiresIn = int.Parse(_configuration["Jwt:AccessTokenExpirationMinutes"]!) * 60,
+            //ExpiresIn = int.Parse(_configuration["Jwt:AccessTokenExpirationMinutes"]!) * 60,
+            ExpiresIn = _jwtOptions.AccessTokenExpirationMinutes * 60,
             User = new UserInfoDto
             {
                 Id = user.Id,

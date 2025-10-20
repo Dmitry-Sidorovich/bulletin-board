@@ -124,6 +124,7 @@ public sealed class AdvertisementReadRepository : IAdvertisementReadRepository
                 Id = a.Id,
                 Title = a.Title,
                 Description = a.Description,
+                Price = a.Price,
                 CategoryId = a.CategoryId,
                 AuthorId = a.AuthorId,
                 Contact = new ContactDto
@@ -170,7 +171,6 @@ public sealed class AdvertisementReadRepository : IAdvertisementReadRepository
     
         var total = await query.CountAsync(cancellationToken);
     
-        // ✅ НАЧАЛО ИЗМЕНЕНИЙ - исправлен маппинг (StatusDto вместо Status)
         var items = await query
             .Skip((filter.PageNumber - 1) * filter.PageSize)
             .Take(filter.PageSize)
@@ -180,7 +180,7 @@ public sealed class AdvertisementReadRepository : IAdvertisementReadRepository
                 Title = a.Title,
                 Description = a.Description,
                 Price = a.Price,
-                Status = (AdStatusDto)a.Status, // ✅ Исправлено с Status на StatusDto
+                Status = (AdStatusDto)a.Status,
                 CategoryId = a.CategoryId,
                 AuthorId = a.AuthorId,
                 Contact = new ContactDto
@@ -192,7 +192,6 @@ public sealed class AdvertisementReadRepository : IAdvertisementReadRepository
                 CreatedAt = a.CreatedAt
             })
             .ToListAsync(cancellationToken);
-        // ✅ КОНЕЦ ИЗМЕНЕНИЙ
     
         // Получаем категории отдельным запросом
         if (items.Any())

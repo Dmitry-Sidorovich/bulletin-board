@@ -111,4 +111,12 @@ public sealed class CategoryService : ICategoryService
         await _cacheService.RemoveAsync("categories:root", cancellationToken);
         return true;
     }
+    
+    /// <summary>
+    /// Возвращает категорию по идентификатору.
+    /// </summary>
+    public async Task<CategoryDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return await _categoryReadRepository.GetByIdAsync(id, cancellationToken);
+    }
 }

@@ -65,4 +65,14 @@ public interface ICategoryService
     /// <c>true</c>, если категория удалена; иначе <c>false</c> (например, если не найдена).
     /// </returns>
     Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Возвращает категорию по идентификатору.
+    /// </summary>
+    /// <param name="id">Идентификатор категории.</param>
+    /// <param name="cancellationToken">Токен отмены операции.</param>
+    /// <returns>
+    /// DTO категории или <c>null</c>, если не найдена.
+    /// </returns>
+    Task<CategoryDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 }

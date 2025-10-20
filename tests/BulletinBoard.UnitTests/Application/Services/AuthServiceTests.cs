@@ -2,10 +2,13 @@
 using BulletinBoard.Application.Contexts.Users;
 using BulletinBoard.Application.Exceptions;
 using BulletinBoard.Contracts.Auth;
+using BulletinBoard.Domain.Base;
 using BulletinBoard.Domain.Entities;
+using BulletinBoard.Infrastructure.Contexts.Auth.Options;
 using BulletinBoard.Infrastructure.Contexts.Auth.Services;
 using FluentAssertions;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using Moq;
 
 namespace BulletinBoard.UnitTests.Application.Services;
@@ -18,7 +21,7 @@ public class AuthServiceTests
     private readonly Mock<IJwtTokenService> _mockJwtTokenService;
     private readonly Mock<IUnitOfWork> _mockUnitOfWork;
     private readonly Mock<IConfiguration> _mockConfiguration;
-    private readonly AuthService _service;
+    private readonly AuthService _authService;
 
     public AuthServiceTests()
     {
@@ -26,19 +29,43 @@ public class AuthServiceTests
         _mockRefreshTokenRepository = new Mock<IRefreshTokenRepository>();
         _mockPasswordHasher = new Mock<IPasswordHasher>();
         _mockJwtTokenService = new Mock<IJwtTokenService>();
-        _mockUnitOfWork = new Mock<IUnitOfWork>();
+        _mockUnitOfWork = new Mock<IUnitOfWork>(); 
         _mockConfiguration = new Mock<IConfiguration>();
 
-        _mockConfiguration.Setup(c => c["Jwt:RefreshTokenExpirationDays"]).Returns("30");
-        _mockConfiguration.Setup(c => c["Jwt:AccessTokenExpirationMinutes"]).Returns("15");
+        var jwtOptions = Options.Create(new JwtOptions() // CHANGED
+        {
+            Issuer = "TestIssuer",
+            Audience = "TestAudience",
+            Secret = "test-secret-min-32-chars-1234567890abcd",
+            AccessTokenExpirationMinutes = 60,
+            RefreshTokenExpirationDays = 7
+        });
+        // _mockConfiguration.Setup(c => c["Jwt:RefreshTokenExpirationDays"]).Returns("30");
+        // _mockConfiguration.Setup(c => c["Jwt:AccessTokenExpirationMinutes"]).Returns("15");
 
-        _service = new Infrastructure.Contexts.Auth.Services.AuthService(
+        // _mockConfiguration.Setup(c => c["Jwt:RefreshTokenExpirationDays"])
+        //     .Returns("7");
+        // _mockConfiguration.Setup(c => c["Jwt:AccessTokenExpirationMinutes"])
+        //     .Returns("60");
+
+        // var config = new ConfigurationBuilder()
+        //     .AddInMemoryCollection(new Dictionary<string, string?>
+        //     {
+        //         ["Jwt:RefreshTokenExpirationDays"]     = "7",
+        //         ["Jwt:AccessTokenExpirationMinutes"]   = "60",
+        //         ["Jwt:Issuer"]   = "TestIssuer",
+        //         ["Jwt:Audience"] = "TestAudience",
+        //         ["Jwt:Secret"]   = "test-secret-min-32-chars-1234567890abcd"
+        //     })
+        //     .Build();
+
+        _authService = new Infrastructure.Contexts.Auth.Services.AuthService(
             _mockUserRepository.Object,
             _mockRefreshTokenRepository.Object,
             _mockPasswordHasher.Object,
             _mockJwtTokenService.Object,
             _mockUnitOfWork.Object,
-            _mockConfiguration.Object);
+            jwtOptions); // CHANGED
     }
 
     [Fact]
@@ -61,7 +88,7 @@ public class AuthServiceTests
             .ReturnsAsync((User?)null);
         _mockPasswordHasher.Setup(h => h.HashPassword(registerDto.Password))
             .Returns(hashedPassword);
-        
+
         _mockJwtTokenService
             .Setup(j => j.GenerateAccessToken(It.IsAny<User>()))
             .Returns(accessToken);
@@ -70,7 +97,7 @@ public class AuthServiceTests
             .Returns(refreshToken);
 
         // Act
-        var result = await _service.RegisterAsync(registerDto, CancellationToken.None);
+        var result = await _authService.RegisterAsync(registerDto, CancellationToken.None);
 
         // Assert
         result.Should().NotBeNull();
@@ -79,9 +106,10 @@ public class AuthServiceTests
         result.User.Should().NotBeNull();
         result.User.Email.Should().Be(registerDto.Email);
         result.User.DisplayName.Should().Be(registerDto.DisplayName);
-        
+
         _mockUserRepository.Verify(r => r.AddAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Once);
-        _mockRefreshTokenRepository.Verify(r => r.AddAsync(It.IsAny<RefreshToken>(), It.IsAny<CancellationToken>()), Times.Once);
+        _mockRefreshTokenRepository.Verify(r => r.AddAsync(It.IsAny<RefreshToken>(), It.IsAny<CancellationToken>()),
+            Times.Once);
         _mockUnitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.AtLeast(2));
     }
 
@@ -101,7 +129,7 @@ public class AuthServiceTests
             .ReturnsAsync(existingUser);
 
         // Act
-        var act = async () => await _service.RegisterAsync(registerDto, CancellationToken.None);
+        var act = async () => await _authService.RegisterAsync(registerDto, CancellationToken.None);
 
         // Assert
         await act.Should().ThrowAsync<ValidationException>()
@@ -126,7 +154,7 @@ public class AuthServiceTests
             .ReturnsAsync(user);
         _mockPasswordHasher.Setup(h => h.VerifyPassword(loginDto.Password, user.PasswordHash))
             .Returns(true);
-        
+
         _mockJwtTokenService
             .Setup(j => j.GenerateAccessToken(It.Is<User>(u => u.Email == user.Email)))
             .Returns(accessToken);
@@ -134,7 +162,7 @@ public class AuthServiceTests
             .Setup(j => j.GenerateRefreshToken())
             .Returns(refreshToken);
         // Act
-        var result = await _service.LoginAsync(loginDto, CancellationToken.None);
+        var result = await _authService.LoginAsync(loginDto, CancellationToken.None);
 
         // Assert
         result.Should().NotBeNull();
@@ -157,7 +185,7 @@ public class AuthServiceTests
             .ReturnsAsync((User?)null);
 
         // Act
-        var act = async () => await _service.LoginAsync(loginDto, CancellationToken.None);
+        var act = async () => await _authService.LoginAsync(loginDto, CancellationToken.None);
 
         // Assert
         await act.Should().ThrowAsync<ValidationException>()
@@ -182,7 +210,7 @@ public class AuthServiceTests
             .Returns(false);
 
         // Act
-        var act = async () => await _service.LoginAsync(loginDto, CancellationToken.None);
+        var act = async () => await _authService.LoginAsync(loginDto, CancellationToken.None);
 
         // Assert
         await act.Should().ThrowAsync<ValidationException>()
@@ -190,47 +218,75 @@ public class AuthServiceTests
     }
 
     [Fact]
-    public async Task RefreshTokenAsync_WithValidToken_ShouldReturnNewTokens()
-    {
-        // Arrange
-        var oldRefreshToken = "old_refresh_token";
-        var userId = Guid.NewGuid();
-        var user = new User("John Doe", "john@example.com", "hash");
-        
-        var storedRefreshToken = new RefreshToken(
-            userId,
-            oldRefreshToken,
-            DateTimeOffset.UtcNow.AddDays(7));
+public async Task RefreshTokenAsync_WithValidToken_ShouldReturnNewTokens()
+{
+    // Arrange
+    var oldRefreshToken = "old_refresh_token";
+    var userId = Guid.NewGuid();
 
-        var newAccessToken = "new_access_token";
-        var newRefreshToken = "new_refresh_token";
+    var user = new User("John Doe", "john@example.com", "hash123", null);
 
-        _mockRefreshTokenRepository.Setup(r => r.GetByTokenAsync(oldRefreshToken, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(storedRefreshToken);
-        _mockUserRepository.Setup(r => r.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(user);
-    
-        _mockJwtTokenService
-            .Setup(j => j.GenerateAccessToken(It.Is<User>(u => u.Email == user.Email)))
-            .Returns(newAccessToken);
-        _mockJwtTokenService
-            .Setup(j => j.GenerateRefreshToken())
-            .Returns(newRefreshToken);
+    // фиксируем Id через reflection (EntityBase.Id protected set)
+    var idProp = typeof(User).BaseType!.GetProperty("Id",
+        System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+    idProp!.SetValue(user, userId);
 
-        // Act
-        var result = await _service.RefreshTokenAsync(
-            new RefreshTokenDto { RefreshToken = oldRefreshToken }, 
-            CancellationToken.None);
+    var storedRefreshToken = new RefreshToken(
+        userId,
+        oldRefreshToken,
+        DateTimeOffset.UtcNow.AddDays(7));
 
-        // Assert
-        result.Should().NotBeNull();
-        result.AccessToken.Should().Be(newAccessToken);
-        result.RefreshToken.Should().Be(newRefreshToken);
-    
-        storedRefreshToken.IsRevoked.Should().BeTrue(); // ✅ Проверяем реальное свойство
-        _mockRefreshTokenRepository.Verify(r => r.AddAsync(It.IsAny<RefreshToken>(), It.IsAny<CancellationToken>()), Times.Once);
-        _mockUnitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.AtLeast(2));
-    }
+    var newAccessToken  = "new_access_token";
+    var newRefreshToken = "new_refresh_token";
+
+    _mockRefreshTokenRepository
+        .Setup(r => r.GetByTokenAsync(oldRefreshToken, It.IsAny<CancellationToken>()))
+        .ReturnsAsync(storedRefreshToken);
+
+    _mockUserRepository
+        .Setup(r => r.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
+        .ReturnsAsync(user);
+
+    // репозиторий добавления нового refresh-токена
+    _mockRefreshTokenRepository
+        .Setup(r => r.AddAsync(It.IsAny<RefreshToken>(), It.IsAny<CancellationToken>()))
+        .Returns(Task.CompletedTask); // OK для методов Task
+
+    // UoW всегда «сохраняет» что-то
+    _mockUnitOfWork
+        .Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
+        .ReturnsAsync(1); // Task<int>
+
+    _mockJwtTokenService
+        .Setup(j => j.GenerateAccessToken(It.IsAny<User>()))
+        .Returns(newAccessToken);
+
+    _mockJwtTokenService
+        .Setup(j => j.GenerateRefreshToken())
+        .Returns(newRefreshToken);
+
+    // Act
+    var result = await _authService.RefreshTokenAsync(
+        new RefreshTokenDto { RefreshToken = oldRefreshToken },
+        CancellationToken.None);
+
+    // Assert
+    result.Should().NotBeNull();
+    result.AccessToken.Should().Be(newAccessToken);
+    result.RefreshToken.Should().Be(newRefreshToken);
+    result.ExpiresIn.Should().Be(60 * 60); // 60 минут * 60 сек
+
+    storedRefreshToken.IsRevoked.Should().BeTrue();
+
+    _mockRefreshTokenRepository.Verify(
+        r => r.AddAsync(It.IsAny<RefreshToken>(), It.IsAny<CancellationToken>()),
+        Times.Once);
+
+    _mockUnitOfWork.Verify(
+        u => u.SaveChangesAsync(It.IsAny<CancellationToken>()),
+        Times.Once()); // за revoke и за добавление нового refresh-токена
+}
+
 
     [Fact]
     public async Task RefreshTokenAsync_WithInvalidToken_ShouldThrowValidationException()
@@ -241,8 +297,8 @@ public class AuthServiceTests
             .ReturnsAsync((RefreshToken?)null);
 
         // Act
-        var act = async () => await _service.RefreshTokenAsync(
-            new RefreshTokenDto { RefreshToken = invalidToken }, 
+        var act = async () => await _authService.RefreshTokenAsync(
+            new RefreshTokenDto { RefreshToken = invalidToken },
             CancellationToken.None);
 
         // Assert
@@ -256,18 +312,21 @@ public class AuthServiceTests
         // Arrange
         var expiredToken = "expired_token";
         var userId = Guid.NewGuid();
-    
-        var refreshToken = new RefreshToken(
-            userId,
-            expiredToken,
-            DateTimeOffset.UtcNow.AddDays(-1)); // Истекший токен
+
+        var validExpiresAt = DateTimeOffset.UtcNow.AddDays(7); // Создан с датой в будущем
+        var refreshToken = new RefreshToken(userId, expiredToken, validExpiresAt);
+
+        // ✅ Симулируем, что время прошло (мокаем IsActive через приватное поле)
+        // Используем reflection для установки ExpiresAt в прошлое
+        var expiresAtProperty = typeof(RefreshToken).GetProperty("ExpiresAt");
+        expiresAtProperty!.SetValue(refreshToken, DateTimeOffset.UtcNow.AddDays(-1));
 
         _mockRefreshTokenRepository.Setup(r => r.GetByTokenAsync(expiredToken, It.IsAny<CancellationToken>()))
             .ReturnsAsync(refreshToken);
 
         // Act
-        var act = async () => await _service.RefreshTokenAsync(
-            new RefreshTokenDto { RefreshToken = expiredToken }, 
+        var act = async () => await _authService.RefreshTokenAsync(
+            new RefreshTokenDto { RefreshToken = expiredToken },
             CancellationToken.None);
 
         // Assert
@@ -281,7 +340,7 @@ public class AuthServiceTests
         // Arrange
         var token = "valid_token";
         var userId = Guid.NewGuid();
-    
+
         var refreshToken = new RefreshToken(
             userId,
             token,
@@ -291,7 +350,7 @@ public class AuthServiceTests
             .ReturnsAsync(refreshToken);
 
         // Act
-        await _service.LogoutAsync(token, CancellationToken.None);
+        await _authService.LogoutAsync(token, CancellationToken.None);
 
         // Assert
         refreshToken.IsRevoked.Should().BeTrue();
@@ -307,7 +366,7 @@ public class AuthServiceTests
             .ReturnsAsync((RefreshToken?)null);
 
         // Act
-        var act = async () => await _service.LogoutAsync(token, CancellationToken.None);
+        var act = async () => await _authService.LogoutAsync(token, CancellationToken.None);
 
         // Assert
         await act.Should().NotThrowAsync();

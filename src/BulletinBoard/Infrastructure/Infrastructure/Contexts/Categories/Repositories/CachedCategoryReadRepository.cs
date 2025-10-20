@@ -14,6 +14,8 @@ public class CachedCategoryReadRepository : ICategoryReadRepository
     private readonly ICategoryReadRepository _inner;
     private readonly ICacheService _cache;
     private readonly IConfiguration _config;
+    
+    private readonly TimeSpan _listTtl;
 
     /// <summary>
     /// Инициализирует декоратор с кешированием.
@@ -29,13 +31,14 @@ public class CachedCategoryReadRepository : ICategoryReadRepository
         _inner = inner;
         _cache = cache;
         _config = config;
+        
+        _listTtl = TimeSpan.FromMinutes(_config.GetValue<int>("Caching:CategoryListMinutes"));
     }
 
     /// <inheritdoc />
     public async Task<IReadOnlyList<CategoryDto>> GetRootsAsync(CancellationToken ct = default)
     {
-        var key = "categories:root";
-        var ttl = TimeSpan.FromMinutes(_config.GetValue<int>("Caching:CategoryListMinutes"));
+        const string key = "categories:root";
 
         // Проверяем кеш (кешируем как List, возвращаем как IReadOnlyList)
         var cached = await _cache.GetAsync<List<CategoryDto>>(key, ct);
@@ -49,7 +52,7 @@ public class CachedCategoryReadRepository : ICategoryReadRepository
         
         // Сохраняем в кеш (конвертируем в List для сериализации)
         var listResult = result.ToList();
-        await _cache.SetAsync(key, listResult, ttl, ct);
+        await _cache.SetAsync(key, listResult, _listTtl, ct);
 
         return result;
     }
@@ -61,5 +64,29 @@ public class CachedCategoryReadRepository : ICategoryReadRepository
         CancellationToken ct = default)
     {
         return _inner.GetChildrenAsync(parentId, page, ct);
+    }
+    
+    /// <inheritdoc />
+    public async Task<CategoryDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var key = $"category:{id}";
+        // Отдельные сущности можно кешировать дольше, чем списки.
+        // Для этого можно добавить отдельный TTL в конфиг, например, "CategoryDetailMinutes".
+        // Для простоты пока используем тот же TTL, что и для списков.
+        var ttl = _listTtl; 
+
+        var cached = await _cache.GetAsync<CategoryDto>(key, cancellationToken);
+        if (cached != null)
+        {
+            return cached;
+        }
+
+        var result = await _inner.GetByIdAsync(id, cancellationToken);
+        if (result != null)
+        {
+            await _cache.SetAsync(key, result, ttl, cancellationToken);
+        }
+
+        return result;
     }
 }

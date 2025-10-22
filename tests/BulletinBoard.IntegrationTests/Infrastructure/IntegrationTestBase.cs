@@ -6,8 +6,8 @@ using BulletinBoard.Application.Abstractions;
 using BulletinBoard.Contracts.Auth;
 using BulletinBoard.Domain.Entities;
 using BulletinBoard.Domain.Enums;
+using BulletinBoard.Domain.ValueObjects;
 using BulletinBoard.Infrastructure.DataAccess.Db;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
@@ -16,9 +16,7 @@ namespace BulletinBoard.IntegrationTests.Infrastructure;
 public abstract class IntegrationTestBase : IClassFixture<BulletinBoardWebApplicationFactory>, IAsyncLifetime
 {
     protected readonly BulletinBoardWebApplicationFactory Factory;
-    
-    // ✅ ИСПРАВЛЕНО: _scope и DbContext теперь невидимы для тестов-наследников,
-    // что предотвращает их неправильное использование.
+
     private IServiceScope _scope = null!;
     protected BulletinBoardDbContext DbContext = null!;
 
@@ -27,12 +25,11 @@ public abstract class IntegrationTestBase : IClassFixture<BulletinBoardWebApplic
         Factory = factory;
     }
 
-    // Логика Initialize/Dispose теперь идеальна для стратегии "уникальная БД на тест".
     public virtual async Task InitializeAsync()
     {
         _scope = Factory.Services.CreateScope();
         DbContext = _scope.ServiceProvider.GetRequiredService<BulletinBoardDbContext>();
-        // EnsureCreatedAsync достаточно, так как имя БД всегда уникально.
+
         await DbContext.Database.EnsureDeletedAsync();
         await DbContext.Database.EnsureCreatedAsync();
     }
@@ -67,13 +64,12 @@ public abstract class IntegrationTestBase : IClassFixture<BulletinBoardWebApplic
     {
         var adminEmail = $"admin-{Guid.NewGuid()}@example.com";
         var adminPassword = "AdminPassword123!";
-
-        // ✅ ИСПРАВЛЕНО: Получаем сервисы из _scope, который принадлежит текущему тесту.
+        
         var passwordHasher = _scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
         var hashedPassword = passwordHasher.HashPassword(adminPassword);
         
         var user = new User("Admin User", adminEmail, hashedPassword, null, UserRole.Admin);
-        // ✅ ИСПРАВЛЕНО: Используем DbContext, который принадлежит текущему тесту.
+
         await DbContext.Users.AddAsync(user);
         await DbContext.SaveChangesAsync();
 
@@ -96,9 +92,6 @@ public abstract class IntegrationTestBase : IClassFixture<BulletinBoardWebApplic
         var registerResponse = await client.PostAsJsonAsync("/api/auth/register", dto);
         registerResponse.EnsureSuccessStatusCode();
         
-        // ВАЖНО: После регистрации нам нужно залогиниться, чтобы получить токены.
-        // Ваш предыдущий код пытался получить результат из регистрации, но регистрация
-        // обычно возвращает 201 Created без тела с токенами.
         var loginDto = new LoginDto { Email = dto.Email, Password = dto.Password };
         var loginResponse = await client.PostAsJsonAsync("/api/auth/login", loginDto);
         loginResponse.EnsureSuccessStatusCode();

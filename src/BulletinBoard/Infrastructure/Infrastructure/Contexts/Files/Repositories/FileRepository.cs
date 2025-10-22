@@ -1,4 +1,5 @@
-﻿using BulletinBoard.Application.Contexts.Files.Repositories;
+﻿using BulletinBoard.Application.Abstractions;
+using BulletinBoard.Application.Contexts.Files.Repositories;
 using BulletinBoard.Infrastructure.DataAccess.Db;
 using Microsoft.EntityFrameworkCore;
 using File = BulletinBoard.Domain.Entities.File;
@@ -9,13 +10,15 @@ namespace BulletinBoard.Infrastructure.Contexts.Files.Repositories;
 public sealed class FileRepository : IFileRepository
 {
     private readonly BulletinBoardDbContext _context;
+    private readonly IFileStorageService _storageService;
 
     /// <summary>
     /// Инициализирует репозиторий файлов.
     /// </summary>
-    public FileRepository(BulletinBoardDbContext context)
+    public FileRepository(BulletinBoardDbContext context, IFileStorageService storageService)
     {
         _context = context;
+        _storageService = storageService;
     }
 
     /// <inheritdoc />
@@ -33,10 +36,16 @@ public sealed class FileRepository : IFileRepository
     }
 
     /// <inheritdoc />
-    public Task DeleteAsync(Guid fileId, CancellationToken cancellationToken = default)
+    public async Task DeleteAsync(Guid fileId, CancellationToken cancellationToken = default)
     {
-        return _context.Files
-            .Where(f => f.Id == fileId)
-            .ExecuteDeleteAsync(cancellationToken);
+        var fileToDelete = await _context.Files.FindAsync(new object[] { fileId }, cancellationToken);
+        if (fileToDelete != null)
+        {
+            // Удаляем файл из хранилища
+            await _storageService.DeleteFileAsync(fileToDelete.FilePath, cancellationToken);
+
+            // Удаляем запись из БД
+            _context.Files.Remove(fileToDelete);
+        }
     }
 }

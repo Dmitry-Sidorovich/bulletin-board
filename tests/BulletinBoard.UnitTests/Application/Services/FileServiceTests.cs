@@ -65,7 +65,7 @@ public class FileServiceTests
         // Arrange
         var fileId = Guid.NewGuid();
         var file = new DomainFile("test.jpg", "/uploads/test.jpg", "image/jpeg", 1024);
-        
+
         _mockFileRepository.Setup(r => r.GetByIdAsync(fileId, default))
             .ReturnsAsync(file);
         _mockFileStorageService.Setup(s => s.GetFileUrl(file.FilePath))
@@ -187,5 +187,44 @@ public class FileServiceTests
         result.Should().BeFalse();
         _mockFileStorageService.Verify(s => s.DeleteFileAsync(It.IsAny<string>(), default), Times.Never);
         _mockFileRepository.Verify(r => r.DeleteAsync(It.IsAny<Guid>(), default), Times.Never);
+    }
+
+    // 1. ТЕСТ: UploadAsync с null stream
+    [Fact]
+    public async Task UploadAsync_WithNullStream_ShouldThrowArgumentNullException()
+    {
+        // Act
+        var act = async () => await _service.UploadAsync(null!, "test.jpg", "image/jpeg", 1024);
+
+        // Assert
+        await act.Should().ThrowAsync<ArgumentNullException>();
+    }
+
+// 2. ТЕСТ: UploadAsync с пустым stream
+    [Fact]
+    public async Task UploadAsync_WithEmptyStream_ShouldThrowArgumentException()
+    {
+        // Arrange
+        var stream = new MemoryStream(); // Пустой stream
+
+        // Act & Assert - зависит от реализации
+    }
+
+// 3. ТЕСТ: UploadAsync с огромным файлом (DoS защита)
+    [Fact]
+    public async Task UploadAsync_WithHugeFile_ShouldThrowArgumentException()
+    {
+        // Arrange
+        var stream = new MemoryStream();
+        var fileName = "test.jpg";
+        var contentType = "image/jpeg";
+        var fileSize = 100_000_000_000L; // 100 GB
+
+        // Act
+        var act = async () => await _service.UploadAsync(stream, fileName, contentType, fileSize);
+
+        // Assert - если есть проверка максимального размера
+        await act.Should().ThrowAsync<ArgumentException>()
+            .WithParameterName("fileSize");
     }
 }

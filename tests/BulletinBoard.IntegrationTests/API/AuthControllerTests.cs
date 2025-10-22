@@ -1,5 +1,7 @@
 ﻿using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using BulletinBoard.Contracts.Advertisements;
 using BulletinBoard.Contracts.Auth;
 using BulletinBoard.IntegrationTests.Infrastructure;
 using FluentAssertions;
@@ -146,9 +148,9 @@ public class AuthControllerTests : IntegrationTestBase
         var client = CreateClient();
         var invalidDto = new RegisterDto
         {
-            DisplayName = "a", // Слишком короткое
-            Email = "invalid-email", // Невалидный email
-            Password = "123" // Слишком короткий пароль
+            DisplayName = "a",
+            Email = "invalid-email", 
+            Password = "123"
         };
 
         // Act
@@ -157,4 +159,35 @@ public class AuthControllerTests : IntegrationTestBase
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
+    
+    [Fact]
+    public async Task Logout_WithValidToken_RevokesToken()
+    {
+        // Arrange
+        var client = CreateClient();
+        var registerDto = new RegisterDto
+        {
+            DisplayName = "Logout Test",
+            Email = $"logout-{Guid.NewGuid()}@example.com",
+            Password = "Password123!"
+        };
+        var registerResponse = await client.PostAsJsonAsync("/api/auth/register", registerDto);
+        var tokens = await registerResponse.Content.ReadFromJsonAsync<LoginResponseDto>();
+        
+        client.DefaultRequestHeaders.Authorization = 
+            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", tokens!.AccessToken);
+    
+        // Act - Logout
+        var logoutDto = new LogoutDto { RefreshToken = tokens!.RefreshToken };
+        var logoutResponse = await client.PostAsJsonAsync("/api/auth/logout", logoutDto);
+    
+        // Assert
+        logoutResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
+    
+        // Verify: попытка использовать отозванный refresh token
+        var refreshDto = new RefreshTokenDto { RefreshToken = tokens.RefreshToken };
+        var refreshResponse = await client.PostAsJsonAsync("/api/auth/refresh", refreshDto);
+        refreshResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+    
 }

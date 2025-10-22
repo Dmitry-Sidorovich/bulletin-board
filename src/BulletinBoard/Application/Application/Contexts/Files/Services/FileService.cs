@@ -1,8 +1,9 @@
 ﻿using AutoMapper;
 using BulletinBoard.Application.Abstractions;
+using BulletinBoard.Application.Constants;
 using BulletinBoard.Application.Contexts.Files.Repositories;
 using BulletinBoard.Contracts.Files;
-using Microsoft.Extensions.Logging; 
+using Microsoft.Extensions.Logging;
 using File = BulletinBoard.Domain.Entities.File;
 
 namespace BulletinBoard.Application.Contexts.Files.Services;
@@ -41,10 +42,31 @@ public sealed class FileService : IFileService
         long fileSize,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(stream);
+        
+        if (fileSize <= 0 || fileSize > FileConstants.MaxFileSize)
+        {
+            throw new ArgumentException($"Размер файла должен быть от 1 байта до {FileConstants.MaxFileSize / 1024 / 1024} MB.", nameof(fileSize));
+        }
+        
         _logger.LogInformation("Загрузка файла: {FileName}, размер: {FileSize} байт", fileName, fileSize);
         
+        var finalContentType = contentType;
+        if (string.IsNullOrWhiteSpace(finalContentType))
+        {
+            var extension = Path.GetExtension(fileName).ToLowerInvariant();
+            finalContentType = extension switch
+            {
+                ".jpg" => "image/jpeg",
+                ".jpeg" => "image/jpeg",
+                ".png" => "image/png",
+                ".webp" => "image/webp",
+                _ => "application/octet-stream"
+            };
+        }
+        
         var filePath = await _fileStorageService.SaveFileAsync(stream, fileName, cancellationToken);
-        var file = new File(fileName, filePath, contentType, fileSize);
+        var file = new File(fileName, filePath, finalContentType, fileSize);
 
         await _fileRepository.AddAsync(file, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

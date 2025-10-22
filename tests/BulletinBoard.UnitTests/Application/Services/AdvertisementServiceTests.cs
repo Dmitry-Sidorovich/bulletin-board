@@ -613,4 +613,88 @@ public class AdvertisementServiceTests
                 default),
             Times.Once);
     }
+
+    // 1. ТЕСТ: ChangeStatusAsync когда объявления не существует
+    [Fact]
+    public async Task ChangeStatusAsync_WhenAdvertisementNotExists_ShouldThrowNotFoundException()
+    {
+        // Arrange
+        var adId = Guid.NewGuid();
+        var statusDto = new ChangeAdvertisementStatusDto { StatusDto = AdStatusDto.Published };
+
+        _mockRepository.Setup(r => r.GetByIdAsync(adId, default))
+            .ReturnsAsync((Advertisement?)null);
+    
+        // ВАЖНО: Нам нужно настроить и ICurrentUserService, иначе он упадет раньше.
+        _mockCurrentUserService.Setup(s => s.IsOwnerOrAdmin(It.IsAny<Guid>())).Returns(true);
+
+        // Act
+        var act = async () => await _service.ChangeStatusAsync(adId, statusDto);
+
+        // Assert
+        await act.Should().ThrowAsync<NotFoundException>();
+    }
+
+// 2. ТЕСТ: ChangeStatusAsync когда пользователь НЕ владелец
+    [Fact]
+    public async Task ChangeStatusAsync_AsNonOwner_ShouldThrowUnauthorizedAccessException()
+    {
+        // Arrange
+        var adId = Guid.NewGuid();
+        var authorId = Guid.NewGuid();
+        var existingAd = new Advertisement("Title", null, 100m, Guid.NewGuid(), authorId,
+            new Contact("John", "john@test.com"));
+
+        var statusDto = new ChangeAdvertisementStatusDto { StatusDto = AdStatusDto.Published };
+
+        _mockRepository.Setup(r => r.GetByIdAsync(adId, default))
+            .ReturnsAsync(existingAd);
+        _mockCurrentUserService.Setup(s => s.IsOwnerOrAdmin(authorId))
+            .Returns(false); // ✅ НЕ владелец
+
+        // Act
+        var act = async () => await _service.ChangeStatusAsync(adId, statusDto);
+
+        // Assert
+        await act.Should().ThrowAsync<UnauthorizedAccessException>();
+    }
+
+// 3. ТЕСТ: UpdateAsync с null DTO
+    [Fact]
+    public async Task UpdateAsync_WithNullDto_ShouldThrowArgumentNullException()
+    {
+        // Arrange
+        var adId = Guid.NewGuid();
+
+        // Act
+        var act = async () => await _service.UpdateAsync(adId, null!);
+
+        // Assert
+        await act.Should().ThrowAsync<ArgumentNullException>();
+    }
+
+// 4. ТЕСТ: AttachFileAsync когда пользователь не владелец
+    [Fact]
+    public async Task AttachFileAsync_AsNonOwner_ShouldThrowUnauthorizedAccessException()
+    {
+        // Arrange
+        var adId = Guid.NewGuid();
+        var fileId = Guid.NewGuid();
+        var authorId = Guid.NewGuid();
+        var existingAd = new Advertisement("Title", null, 100m, Guid.NewGuid(), authorId,
+            new Contact("John", "john@test.com"));
+
+        _mockFileRepository.Setup(r => r.AdvertisementExistsAsync(adId, default))
+            .ReturnsAsync(true);
+        _mockRepository.Setup(r => r.GetByIdAsync(adId, default))
+            .ReturnsAsync(existingAd);
+        _mockCurrentUserService.Setup(s => s.IsOwnerOrAdmin(authorId))
+            .Returns(false); // ✅ НЕ владелец
+
+        // Act
+        var act = async () => await _service.AttachFileAsync(adId, fileId);
+
+        // Assert
+        await act.Should().ThrowAsync<UnauthorizedAccessException>();
+    }
 }

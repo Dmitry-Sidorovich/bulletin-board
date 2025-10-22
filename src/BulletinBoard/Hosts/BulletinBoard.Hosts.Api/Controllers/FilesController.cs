@@ -1,4 +1,5 @@
-﻿using BulletinBoard.Application.Contexts.Files.Services;
+﻿using BulletinBoard.Application.Constants;
+using BulletinBoard.Application.Contexts.Files.Services;
 using BulletinBoard.Contracts.Files;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -48,9 +49,8 @@ public class FilesController : ControllerBase
         if (!allowedExtensions.Contains(extension))
             return BadRequest("Разрешены только форматы: JPG, PNG, WebP.");
 
-        const long maxFileSize = 5 * 1024 * 1024;
-        if (file.Length > maxFileSize)
-            return BadRequest("Максимальный размер файла: 5 MB.");
+        if (file.Length > FileConstants.MaxFileSize)
+            return BadRequest($"Максимальный размер файла: {FileConstants.MaxFileSize / 1024 / 1024} MB.");
 
         await using var stream = file.OpenReadStream();
         var result = await _fileService.UploadAsync(
@@ -86,7 +86,7 @@ public class FilesController : ControllerBase
     /// <param name="id">ID файла.</param>
     /// <param name="cancellationToken">Токен отмены.</param>
     /// <returns>Файл для скачивания.</returns>
-    [HttpGet("{id:guid}")]
+    [HttpGet("{id:guid}/download")]
     [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Download(

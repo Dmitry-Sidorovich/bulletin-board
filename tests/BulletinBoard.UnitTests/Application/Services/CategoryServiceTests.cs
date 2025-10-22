@@ -94,9 +94,13 @@ public class CategoryServiceTests
         var parentId = Guid.NewGuid();
         var name = "Child Category";
         var expectedDto = new CategoryDto { Id = Guid.NewGuid(), Name = name, ParentId = parentId };
+        
+        var parentCategory = new Category("Parent", parentId: parentId);
+        _mockRepository.Setup(r => r.GetByIdAsync(parentId, default))
+            .ReturnsAsync(parentCategory);
         _mockMapper.Setup(m => m.Map<CategoryDto>(It.IsAny<Category>()))
             .Returns(expectedDto);
-
+        
         // Act
         var result = await _service.CreateChildAsync(parentId, name);
 
@@ -219,5 +223,24 @@ public class CategoryServiceTests
         result.Should().NotBeNull();
         result.Items.Should().HaveCount(2);
         result.Items.All(c => c.ParentId == parentId).Should().BeTrue();
+    }
+    
+    // ТЕСТ: CreateChildAsync когда родитель не существует
+    [Fact]
+    public async Task CreateChildAsync_WhenParentNotExists_ShouldThrowKeyNotFoundException()
+    {
+        // Arrange
+        var parentId = Guid.NewGuid();
+        var name = "Child Category";
+
+        _mockRepository.Setup(r => r.GetByIdAsync(parentId, default))
+            .ReturnsAsync((Category?)null);
+
+        // Act
+        var act = async () => await _service.CreateChildAsync(parentId, name);
+
+        // Assert
+        await act.Should().ThrowAsync<KeyNotFoundException>()
+            .WithMessage("*родительская категория*");
     }
 }

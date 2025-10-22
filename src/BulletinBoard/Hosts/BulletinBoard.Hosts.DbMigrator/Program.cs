@@ -26,6 +26,10 @@ await using var context = new BulletinBoardDbContext(optionsBuilder.Options);
 Console.WriteLine("Applying migrations...");
 await context.Database.MigrateAsync();
 
+// Убедимся, что все таблицы созданы (на случай если миграции пустые)
+Console.WriteLine("Ensuring database schema...");
+await context.Database.EnsureCreatedAsync();
+
 Console.WriteLine("✅ Migrations applied successfully!\n");
 
 return;

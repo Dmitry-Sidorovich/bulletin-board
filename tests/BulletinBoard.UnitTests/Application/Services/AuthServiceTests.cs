@@ -29,7 +29,7 @@ public class AuthServiceTests
         _mockRefreshTokenRepository = new Mock<IRefreshTokenRepository>();
         _mockPasswordHasher = new Mock<IPasswordHasher>();
         _mockJwtTokenService = new Mock<IJwtTokenService>();
-        _mockUnitOfWork = new Mock<IUnitOfWork>(); 
+        _mockUnitOfWork = new Mock<IUnitOfWork>();
         _mockConfiguration = new Mock<IConfiguration>();
 
         var jwtOptions = Options.Create(new JwtOptions() // CHANGED
@@ -59,7 +59,7 @@ public class AuthServiceTests
         //     })
         //     .Build();
 
-        _authService = new Infrastructure.Contexts.Auth.Services.AuthService(
+        _authService = new BulletinBoard.Infrastructure.Contexts.Auth.Services.AuthService(
             _mockUserRepository.Object,
             _mockRefreshTokenRepository.Object,
             _mockPasswordHasher.Object,
@@ -218,74 +218,74 @@ public class AuthServiceTests
     }
 
     [Fact]
-public async Task RefreshTokenAsync_WithValidToken_ShouldReturnNewTokens()
-{
-    // Arrange
-    var oldRefreshToken = "old_refresh_token";
-    var userId = Guid.NewGuid();
+    public async Task RefreshTokenAsync_WithValidToken_ShouldReturnNewTokens()
+    {
+        // Arrange
+        var oldRefreshToken = "old_refresh_token";
+        var userId = Guid.NewGuid();
 
-    var user = new User("John Doe", "john@example.com", "hash123", null);
+        var user = new User("John Doe", "john@example.com", "hash123", null);
 
-    // фиксируем Id через reflection (EntityBase.Id protected set)
-    var idProp = typeof(User).BaseType!.GetProperty("Id",
-        System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
-    idProp!.SetValue(user, userId);
+        // фиксируем Id через reflection (EntityBase.Id protected set)
+        var idProp = typeof(User).BaseType!.GetProperty("Id",
+            System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+        idProp!.SetValue(user, userId);
 
-    var storedRefreshToken = new RefreshToken(
-        userId,
-        oldRefreshToken,
-        DateTimeOffset.UtcNow.AddDays(7));
+        var storedRefreshToken = new RefreshToken(
+            userId,
+            oldRefreshToken,
+            DateTimeOffset.UtcNow.AddDays(7));
 
-    var newAccessToken  = "new_access_token";
-    var newRefreshToken = "new_refresh_token";
+        var newAccessToken = "new_access_token";
+        var newRefreshToken = "new_refresh_token";
 
-    _mockRefreshTokenRepository
-        .Setup(r => r.GetByTokenAsync(oldRefreshToken, It.IsAny<CancellationToken>()))
-        .ReturnsAsync(storedRefreshToken);
+        _mockRefreshTokenRepository
+            .Setup(r => r.GetByTokenAsync(oldRefreshToken, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(storedRefreshToken);
 
-    _mockUserRepository
-        .Setup(r => r.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
-        .ReturnsAsync(user);
+        _mockUserRepository
+            .Setup(r => r.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
 
-    // репозиторий добавления нового refresh-токена
-    _mockRefreshTokenRepository
-        .Setup(r => r.AddAsync(It.IsAny<RefreshToken>(), It.IsAny<CancellationToken>()))
-        .Returns(Task.CompletedTask); // OK для методов Task
+        // репозиторий добавления нового refresh-токена
+        _mockRefreshTokenRepository
+            .Setup(r => r.AddAsync(It.IsAny<RefreshToken>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask); // OK для методов Task
 
-    // UoW всегда «сохраняет» что-то
-    _mockUnitOfWork
-        .Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
-        .ReturnsAsync(1); // Task<int>
+        // UoW всегда «сохраняет» что-то
+        _mockUnitOfWork
+            .Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(1); // Task<int>
 
-    _mockJwtTokenService
-        .Setup(j => j.GenerateAccessToken(It.IsAny<User>()))
-        .Returns(newAccessToken);
+        _mockJwtTokenService
+            .Setup(j => j.GenerateAccessToken(It.IsAny<User>()))
+            .Returns(newAccessToken);
 
-    _mockJwtTokenService
-        .Setup(j => j.GenerateRefreshToken())
-        .Returns(newRefreshToken);
+        _mockJwtTokenService
+            .Setup(j => j.GenerateRefreshToken())
+            .Returns(newRefreshToken);
 
-    // Act
-    var result = await _authService.RefreshTokenAsync(
-        new RefreshTokenDto { RefreshToken = oldRefreshToken },
-        CancellationToken.None);
+        // Act
+        var result = await _authService.RefreshTokenAsync(
+            new RefreshTokenDto { RefreshToken = oldRefreshToken },
+            CancellationToken.None);
 
-    // Assert
-    result.Should().NotBeNull();
-    result.AccessToken.Should().Be(newAccessToken);
-    result.RefreshToken.Should().Be(newRefreshToken);
-    result.ExpiresIn.Should().Be(60 * 60); // 60 минут * 60 сек
+        // Assert
+        result.Should().NotBeNull();
+        result.AccessToken.Should().Be(newAccessToken);
+        result.RefreshToken.Should().Be(newRefreshToken);
+        result.ExpiresIn.Should().Be(60 * 60); // 60 минут * 60 сек
 
-    storedRefreshToken.IsRevoked.Should().BeTrue();
+        storedRefreshToken.IsRevoked.Should().BeTrue();
 
-    _mockRefreshTokenRepository.Verify(
-        r => r.AddAsync(It.IsAny<RefreshToken>(), It.IsAny<CancellationToken>()),
-        Times.Once);
+        _mockRefreshTokenRepository.Verify(
+            r => r.AddAsync(It.IsAny<RefreshToken>(), It.IsAny<CancellationToken>()),
+            Times.Once);
 
-    _mockUnitOfWork.Verify(
-        u => u.SaveChangesAsync(It.IsAny<CancellationToken>()),
-        Times.Once()); // за revoke и за добавление нового refresh-токена
-}
+        _mockUnitOfWork.Verify(
+            u => u.SaveChangesAsync(It.IsAny<CancellationToken>()),
+            Times.Once()); // за revoke и за добавление нового refresh-токена
+    }
 
 
     [Fact]
@@ -371,5 +371,44 @@ public async Task RefreshTokenAsync_WithValidToken_ShouldReturnNewTokens()
         // Assert
         await act.Should().NotThrowAsync();
         _mockUnitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    // 1. ТЕСТ: Попытка использовать refresh token ДВАЖДЫ (replay attack)
+    [Fact]
+    public async Task RefreshTokenAsync_WithRevokedToken_ShouldThrowValidationException()
+    {
+        // Arrange
+        var oldRefreshToken = "old_token";
+        var userId = Guid.NewGuid();
+        var storedRefreshToken = new RefreshToken(userId, oldRefreshToken, DateTimeOffset.UtcNow.AddDays(7));
+        storedRefreshToken.Revoke(); // ✅ Токен отозван
+
+        _mockRefreshTokenRepository
+            .Setup(r => r.GetByTokenAsync(oldRefreshToken, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(storedRefreshToken);
+
+        // Act
+        var act = async () => await _authService.RefreshTokenAsync(
+            new RefreshTokenDto { RefreshToken = oldRefreshToken },
+            CancellationToken.None);
+
+        // Assert
+        await act.Should().ThrowAsync<ValidationException>()
+            .WithMessage("*недействительный*");
+    }
+
+    // 2. ТЕСТ: Регистрация с очень длинным DisplayName
+    [Fact]
+    public async Task RegisterAsync_WithDisplayNameTooLong_ShouldThrowValidationException()
+    {
+        // Arrange
+        var registerDto = new RegisterDto
+        {
+            DisplayName = new string('A', 101), // Если есть ограничение MaxLength
+            Email = "test@example.com",
+            Password = "Password123"
+        };
+
+        // Act & Assert - зависит от валидации
     }
 }

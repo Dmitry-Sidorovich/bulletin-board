@@ -87,6 +87,12 @@ public sealed class CategoryService : ICategoryService
         {
             throw new ArgumentException("Name is required.", nameof(name));
         }
+        
+        var parentExists = await _categoryRepository.GetByIdAsync(parentId, cancellationToken);
+        if (parentExists == null)
+        {
+            throw new KeyNotFoundException("Родительская категория не найдена.");
+        }
             
         var category = new Category(name, parentId);
         await _categoryRepository.AddAsync(category, cancellationToken);

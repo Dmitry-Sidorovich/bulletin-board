@@ -64,28 +64,6 @@ public sealed class AdvertisementsController : ControllerBase
     }
 
     /// <summary>
-    /// Возвращает список всех объявлений с постраничным выводом.
-    /// </summary>
-    /// <param name="page">Параметры пагинации</param>
-    /// <param name="cancellationToken">Токен отмены</param>
-    /// <returns>Постраничный список объявлений</returns>
-    [HttpGet]
-    [ProducesResponseType(typeof(PagedResult<AdvertisementDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<PagedResult<AdvertisementDto>>> GetAdvertisements(
-        [FromQuery] PageRequest page,
-        CancellationToken cancellationToken = default)
-    {
-        var filter = new AdvertisementFilterDto
-        {
-            PageNumber = page.Page,
-            PageSize = page.PageSize
-        };
-
-        var result = await _service.SearchAsync(filter, cancellationToken);
-        return Ok(result);
-    }
-
-    /// <summary>
     /// Создаёт новое объявление.
     /// </summary>
     /// <param name="request">Данные для создания объявления.</param>
@@ -256,12 +234,17 @@ public sealed class AdvertisementsController : ControllerBase
     /// </summary>
     /// <param name="filter">Параметры поиска.</param>
     /// <param name="cancellationToken">Токен отмены операции.</param>
-    [HttpGet("search")]
+    [HttpGet]
     [ProducesResponseType(typeof(PagedResult<AdvertisementDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<PagedResult<AdvertisementDto>>> Search(
         [FromQuery] AdvertisementFilterDto filter,
         CancellationToken cancellationToken = default)
     {
+        // Валидируем параметры пагинации
+        var pageRequest = new PageRequest { Page = filter.PageNumber, PageSize = filter.PageSize };
+        pageRequest.ThrowIfInvalid();
+
         var result = await _service.SearchAsync(filter, cancellationToken);
         return Ok(result);
     }

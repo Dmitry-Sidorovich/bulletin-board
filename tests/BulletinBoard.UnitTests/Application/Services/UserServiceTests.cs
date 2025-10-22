@@ -131,4 +131,33 @@ public class UserServiceTests
         // Assert
         result.Should().BeNull();
     }
+    
+    // 1. ТЕСТ: UpdateAsync с null DTO
+    [Fact]
+    public async Task UpdateAsync_WithNullDto_ShouldThrowArgumentNullException()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+
+        // Act
+        var act = async () => await _service.UpdateAsync(userId, null!);
+
+        // Assert
+        await act.Should().ThrowAsync<ArgumentNullException>();
+    }
+
+// 2. ТЕСТ: GetByIdAsync с Guid.Empty
+    [Fact]
+    public async Task GetByIdAsync_WithEmptyGuid_ShouldReturnNull()
+    {
+        // Arrange
+        _mockReadRepository.Setup(r => r.GetByIdAsync(Guid.Empty, default))
+            .ReturnsAsync((UserDto?)null);
+
+        // Act
+        var result = await _service.GetByIdAsync(Guid.Empty);
+
+        // Assert
+        result.Should().BeNull();
+    }
 }

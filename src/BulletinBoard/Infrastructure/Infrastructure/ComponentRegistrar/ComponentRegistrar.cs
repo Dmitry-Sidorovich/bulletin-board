@@ -44,10 +44,11 @@ public static class ComponentRegistrar
         var cs = configuration.GetConnectionString("MainDb")
                  ?? throw new InvalidOperationException("ConnectionStrings:MainDb is not configured.");
 
-        services.AddDbContext<BulletinBoardDbContext>(opt => opt.UseNpgsql(cs));
+        services.AddDbContext<BulletinBoardDbContext>(opt =>
+            opt.UseNpgsql(cs));
 
         services.AddAutoMapper(typeof(AdvertisementProfile).Assembly);
-        
+
         // Регистрируем оригинальную реализацию
         services.AddScoped<AdvertisementReadRepository>();
         // Регистрируем декоратор
@@ -58,7 +59,7 @@ public static class ComponentRegistrar
             var config = provider.GetRequiredService<IConfiguration>();
             return new CachedAdvertisementReadRepository(inner, cache, config);
         });
-        
+
         services.AddScoped<CategoryReadRepository>();
         services.AddScoped<ICategoryReadRepository>(provider =>
         {
@@ -67,29 +68,29 @@ public static class ComponentRegistrar
             var config = provider.GetRequiredService<IConfiguration>();
             return new CachedCategoryReadRepository(inner, cache, config);
         });
-        
+
         services.AddScoped<IUserReadRepository, UserReadRepository>();
         services.AddScoped<IFileRepository, FileRepository>();
         services.AddScoped<IFileStorageService, LocalFileStorageService>();
         services.AddScoped<IAdvertisementFileRepository, AdvertisementFileRepository>();
-        
+
         services.AddScoped<IAdvertisementRepository, AdvertisementRepository>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
-        
+
         services.AddScoped<IUnitOfWork, UnitOfWork>();
-        
+
         services.AddHttpContextAccessor();
-        
+
         services.AddScoped<ICurrentUserService, CurrentUserService>();
-        
+
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
         services.AddScoped<IAuthService, AuthService>();
-        
+
         services.AddMemoryCache();
-        
+
         var enableRedis = configuration.GetValue<bool>("Caching:EnableRedis");
         if (enableRedis)
         {
@@ -104,6 +105,7 @@ public static class ComponentRegistrar
         {
             services.AddDistributedMemoryCache();
         }
+
         services.AddScoped<ICacheService, HybridCacheService>();
 
         return services;

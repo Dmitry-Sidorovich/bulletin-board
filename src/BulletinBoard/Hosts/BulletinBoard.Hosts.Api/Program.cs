@@ -5,21 +5,13 @@ using BulletinBoard.Application.Validators.Advertisements;
 using BulletinBoard.Hosts.Api.Validation;
 using BulletinBoard.Infrastructure.ComponentRegistrar;
 using BulletinBoard.Infrastructure.Contexts.Auth.Options;
-using BulletinBoard.Infrastructure.DataAccess.Db;
 using BulletinBoard.Infrastructure.Middlewares;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
-
-// Log.Logger = new LoggerConfiguration()
-//     .WriteTo.Console()
-//     .CreateBootstrapLogger();
-//
-// Log.Information("Starting BulletinBoard API...");
 
 try
 {
@@ -114,16 +106,6 @@ try
     });
 
     var app = builder.Build();
-
-    // Инициализация БД - создание таблиц при первом запуске
-    using (var scope = app.Services.CreateScope())
-    {
-        var db = scope.ServiceProvider.GetRequiredService<BulletinBoardDbContext>();
-        Log.Information("Initializing database...");
-        await db.Database.MigrateAsync();
-        await db.Database.EnsureCreatedAsync();
-        Log.Information("Database initialized successfully");
-    }
 
     if (app.Environment.IsDevelopment())
     {

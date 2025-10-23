@@ -1,29 +1,71 @@
-# Build stage - компилируем приложение
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+# ============================================
+# STAGE 1: Build DbMigrator
+# ============================================
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build-migrator
 
 WORKDIR /source
 
-# Копируем файлы проекта и весь код
 COPY ["BulletinBoard.sln", "./"]
 COPY ["src/", "./src/"]
 COPY ["tests/", "./tests/"]
 
-# Восстанавливаем зависимости
-RUN dotnet restore "BulletinBoard.sln"
+RUN dotnet restore "src/BulletinBoard/Hosts/BulletinBoard.Hosts.DbMigrator/BulletinBoard.Hosts.DbMigrator.csproj"
 
-# Компилируем приложение (Release конфигурация для оптимизации)
-RUN dotnet publish "src/BulletinBoard/Hosts/BulletinBoard.Hosts.Api/BulletinBoard.Hosts.Api.csproj" \
+RUN dotnet publish "src/BulletinBoard/Hosts/BulletinBoard.Hosts.DbMigrator/BulletinBoard.Hosts.DbMigrator.csproj" \
     -c Release \
-    -o /app/publish \
+    -o /app/migrator/publish \
     --no-restore
 
-# Runtime stage - создаём финальный image
-FROM mcr.microsoft.com/dotnet/aspnet:8.0
+# ============================================
+# STAGE 2: Build API
+# ============================================
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build-api
+
+WORKDIR /source
+
+COPY ["BulletinBoard.sln", "./"]
+COPY ["src/", "./src/"]
+COPY ["tests/", "./tests/"]
+
+RUN dotnet restore "src/BulletinBoard/Hosts/BulletinBoard.Hosts.Api/BulletinBoard.Hosts.Api.csproj"
+
+RUN dotnet publish "src/BulletinBoard/Hosts/BulletinBoard.Hosts.Api/BulletinBoard.Hosts.Api.csproj" \
+    -c Release \
+    -o /app/api/publish \
+    --no-restore
+
+# ============================================
+# STAGE 3: DbMigrator Runtime
+# ============================================
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS migrator
 
 WORKDIR /app
 
-# Копируем скомпилированное приложение из build stage
-COPY --from=build /app/publish .
+# Копируем DbMigrator
+COPY --from=build-migrator /app/migrator/publish .
+
+# Удаляем Development конфиг, чтобы не переопределил основной
+RUN rm -f /app/appsettings.Development.json
+
+# Копируем только Production конфигурацию
+# appsettings.json содержит localhost, что не подходит для контейнера
+COPY src/BulletinBoard/Hosts/BulletinBoard.Hosts.DbMigrator/appsettings.Production.json ./appsettings.json
+
+# Копируем папку Migrations (для EF Core)
+COPY src/BulletinBoard/Hosts/BulletinBoard.Hosts.DbMigrator/Migrations ./Migrations
+
+# Запускаем миграции
+ENTRYPOINT ["dotnet", "BulletinBoard.Hosts.DbMigrator.dll"]
+
+# ============================================
+# STAGE 4: API Runtime
+# ============================================
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS api
+
+WORKDIR /app
+
+# Копируем API
+COPY --from=build-api /app/api/publish .
 
 # Создаём директорию для загруженных файлов
 RUN mkdir -p wwwroot/uploads

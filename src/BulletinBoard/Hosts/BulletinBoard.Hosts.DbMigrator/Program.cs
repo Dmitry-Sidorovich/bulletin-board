@@ -1,4 +1,4 @@
-﻿using BulletinBoard.Infrastructure.DataAccess.Db;
+﻿using BulletinBoard.Hosts.DbMigrator;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
@@ -17,10 +17,11 @@ var connectionString = configuration.GetConnectionString("MainDb")
 Console.WriteLine($"Database: {GetDatabaseName(connectionString)}\n");
 
 // Создаем контекст напрямую (БЕЗ Host, БЕЗ DI)
-var optionsBuilder = new DbContextOptionsBuilder<BulletinBoardDbContext>();
+// Используем MigrationDbContext, который находит миграции в текущей сборке (DbMigrator)
+var optionsBuilder = new DbContextOptionsBuilder<MigrationDbContext>();
 optionsBuilder.UseNpgsql(connectionString);
 
-await using var context = new BulletinBoardDbContext(optionsBuilder.Options);
+await using var context = new MigrationDbContext(optionsBuilder.Options);
 
 // Применяем миграции
 Console.WriteLine("Applying migrations...");

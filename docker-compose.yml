@@ -38,11 +38,29 @@
       retries: 10
     restart: unless-stopped
 
+  # Database Migrator - запускается первым
+  db-migrator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: migrator
+    container_name: bulletinboard_db_migrator
+    environment:
+      DOTNET_ENVIRONMENT: Production
+      ConnectionStrings__MainDb: "Host=postgres;Port=5432;Database=bulletin_board;Username=postgres;Password=password"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - bulletinboard-network
+    restart: "no"
+
   # ASP.NET Core API
   api:
     build:
       context: .
       dockerfile: Dockerfile
+      target: api
     container_name: bulletinboard_api
     environment:
       ASPNETCORE_ENVIRONMENT: Development
@@ -61,6 +79,8 @@
         condition: service_healthy
       redis:
         condition: service_healthy
+      db-migrator:
+        condition: service_completed_successfully
     volumes:
       - ./uploads:/app/wwwroot/uploads
       - ./logs:/app/logs

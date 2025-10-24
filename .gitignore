@@ -1,43 +1,52 @@
-# Rider / IntelliJ
+# IDE specific files
 .idea/
-*.iml
-
-# VS / build
 .vs/
-*.user
-*.suo
-*.userosscache
+*.iml
 *.sln.docstates
+*.suo
+*.user
+*.userosscache
 
-# dotnet build
+# Build artifacts
 bin/
 obj/
 out/
+publish/
+dist/
 Generated/
 
-# Logs
-*.log
+# Logs and temporary files
 logs/
+*.log
+*.db
+*.pfx
+.env
 
-# OS
+# OS generated files
 .DS_Store
 Thumbs.db
 
-# Coverage / analyzer
+# Rider - https://www.jetbrains.com/help/rider/Rider.xml
+.idea/.idea.BulletinBoard/
+.idea/.idea.Solution1/ # Generic solution name
+.ideaRider/
+
+# User Secrets
+secrets.json
+
+# Entity Framework
+**/Migrations/**/obj/
+
+# Test results and coverage reports
 TestResults/
+coveragereport/
 coverage/
 *.coverage
 *.coveragexml
 *.lcov
 
-# EF Core tools
-**/Migrations/**/obj/
-*.db
+# App settings that should not be in source control
+appsettings.Development.json
 
-# Secrets
-secrets.json
-*.pfx
-
-# Publish artifacts
-publish/
-dist/
+# User uploaded files
+/src/BulletinBoard/Hosts/BulletinBoard.Hosts.Api/wwwroot/uploads/

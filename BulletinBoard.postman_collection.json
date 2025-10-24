@@ -1,0 +1,861 @@
+{
+	"info": {
+		"_postman_id": "bulletin-board-api",
+		"name": "BulletinBoard API - Complete Demo",
+		"description": "Полная коллекция для демонстрации функционала BulletinBoard API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{accessToken}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "accessToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "refreshToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "userId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "advertisementId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "categoryId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "fileId",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "1. Authentication",
+			"item": [
+				{
+					"name": "1.1 Register User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    pm.collectionVariables.set('accessToken', response.accessToken);",
+									"    pm.collectionVariables.set('refreshToken', response.refreshToken);",
+									"    pm.collectionVariables.set('userId', response.user.id);",
+									"    console.log('✅ Registration successful! Token saved.');",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"displayName\": \"Иван Иванов\",\n  \"email\": \"ivan.ivanov@example.com\",\n  \"password\": \"SecurePassword123!\",\n  \"phoneNumber\": \"+79991234567\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/register",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "register"]
+						},
+						"description": "Регистрация нового пользователя. После успешной регистрации автоматически сохраняет токены."
+					},
+					"response": []
+				},
+				{
+					"name": "1.2 Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    pm.collectionVariables.set('accessToken', response.accessToken);",
+									"    pm.collectionVariables.set('refreshToken', response.refreshToken);",
+									"    pm.collectionVariables.set('userId', response.user.id);",
+									"    console.log('✅ Login successful! Token saved.');",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"ivan.ivanov@example.com\",\n  \"password\": \"SecurePassword123!\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "login"]
+						},
+						"description": "Вход в систему. Возвращает Access Token и Refresh Token."
+					},
+					"response": []
+				},
+				{
+					"name": "1.3 Refresh Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    pm.collectionVariables.set('accessToken', response.accessToken);",
+									"    pm.collectionVariables.set('refreshToken', response.refreshToken);",
+									"    console.log('✅ Token refreshed!');",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/refresh",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "refresh"]
+						},
+						"description": "Обновление Access Token через Refresh Token"
+					},
+					"response": []
+				},
+				{
+					"name": "1.4 Logout",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/logout",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "logout"]
+						},
+						"description": "Выход из системы (invalidates refresh token)"
+					},
+					"response": []
+				}
+			],
+			"description": "Аутентификация и авторизация пользователей"
+		},
+		{
+			"name": "2. Categories",
+			"item": [
+				{
+					"name": "2.1 Get Root Categories",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/categories",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "categories"]
+						},
+						"description": "Получить список корневых категорий"
+					},
+					"response": []
+				},
+				{
+					"name": "2.2 Get Category with Subcategories",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Если categoryId не установлен, использовать дефолтный",
+									"if (!pm.collectionVariables.get('categoryId')) {",
+									"    pm.collectionVariables.set('categoryId', '00000000-0000-0000-0000-000000000001');",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/categories/{{categoryId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "categories", "{{categoryId}}"]
+						},
+						"description": "Получить категорию с подкатегориями"
+					},
+					"response": []
+				},
+				{
+					"name": "2.3 Create Category (Admin)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    pm.collectionVariables.set('categoryId', response.id);",
+									"    console.log('✅ Category created:', response.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Электроника\",\n  \"parentId\": null\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/categories",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "categories"]
+						},
+						"description": "Создать новую категорию (требует Admin роль)"
+					},
+					"response": []
+				}
+			],
+			"description": "Работа с категориями объявлений"
+		},
+		{
+			"name": "3. Advertisements",
+			"item": [
+				{
+					"name": "3.1 Get All Advertisements",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/advertisements?page=1&pageSize=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "advertisements"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "pageSize",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Получить все объявления с пагинацией"
+					},
+					"response": []
+				},
+				{
+					"name": "3.2 Get Advertisement by ID",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Если advertisementId не установлен, использовать дефолтный",
+									"if (!pm.collectionVariables.get('advertisementId')) {",
+									"    pm.collectionVariables.set('advertisementId', '00000000-0000-0000-0000-000000000001');",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/advertisements/{{advertisementId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "advertisements", "{{advertisementId}}"]
+						},
+						"description": "Получить детали объявления по ID"
+					},
+					"response": []
+				},
+				{
+					"name": "3.3 Search Advertisements",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/advertisements/search?query=телефон&minPrice=5000&maxPrice=50000&categoryId={{categoryId}}&page=1&pageSize=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "advertisements", "search"],
+							"query": [
+								{
+									"key": "query",
+									"value": "телефон"
+								},
+								{
+									"key": "minPrice",
+									"value": "5000"
+								},
+								{
+									"key": "maxPrice",
+									"value": "50000"
+								},
+								{
+									"key": "categoryId",
+									"value": "{{categoryId}}"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "pageSize",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Поиск объявлений с фильтрами"
+					},
+					"response": []
+				},
+				{
+					"name": "3.4 Create Advertisement",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    pm.collectionVariables.set('advertisementId', response.id);",
+									"    console.log('✅ Advertisement created:', response.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Убедимся что categoryId установлен",
+									"if (!pm.collectionVariables.get('categoryId')) {",
+									"    pm.collectionVariables.set('categoryId', '00000000-0000-0000-0000-000000000001');",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"iPhone 15 Pro Max 256GB\",\n  \"description\": \"Продаю новый iPhone 15 Pro Max в отличном состоянии. Цвет Titanium Blue. Полная комплектация.\",\n  \"price\": 89999,\n  \"categoryId\": \"{{categoryId}}\",\n  \"contact\": {\n    \"phoneNumber\": \"+79991234567\",\n    \"email\": \"ivan.ivanov@example.com\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/advertisements",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "advertisements"]
+						},
+						"description": "Создать новое объявление (требует авторизации)"
+					},
+					"response": []
+				},
+				{
+					"name": "3.5 Update Advertisement",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"iPhone 15 Pro Max 256GB (ОБНОВЛЕНО)\",\n  \"description\": \"Продаю новый iPhone 15 Pro Max. ТОРГ ВОЗМОЖЕН! Цвет Titanium Blue.\",\n  \"price\": 85000,\n  \"categoryId\": \"{{categoryId}}\",\n  \"contact\": {\n    \"phoneNumber\": \"+79991234567\",\n    \"email\": \"ivan.ivanov@example.com\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/advertisements/{{advertisementId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "advertisements", "{{advertisementId}}"]
+						},
+						"description": "Обновить объявление (только владелец)"
+					},
+					"response": []
+				},
+				{
+					"name": "3.6 Change Advertisement Status",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"Active\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/advertisements/{{advertisementId}}/status",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "advertisements", "{{advertisementId}}", "status"]
+						},
+						"description": "Изменить статус объявления (Draft/Active/Archived)"
+					},
+					"response": []
+				},
+				{
+					"name": "3.7 Delete Advertisement",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/advertisements/{{advertisementId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "advertisements", "{{advertisementId}}"]
+						},
+						"description": "Удалить объявление (только владелец или admin)"
+					},
+					"response": []
+				}
+			],
+			"description": "CRUD операции с объявлениями"
+		},
+		{
+			"name": "4. Files",
+			"item": [
+				{
+					"name": "4.1 Upload File",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    pm.collectionVariables.set('fileId', response.fileId);",
+									"    console.log('✅ File uploaded:', response.fileId);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/path/to/image.jpg",
+									"description": "Загружаемый файл (изображение)"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/files",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "files"]
+						},
+						"description": "Загрузить файл (изображение). ВАЖНО: перед использованием укажите путь к реальному файлу в src"
+					},
+					"response": []
+				},
+				{
+					"name": "4.2 Get File Info",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/files/{{fileId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "files", "{{fileId}}"]
+						},
+						"description": "Получить информацию о файле"
+					},
+					"response": []
+				},
+				{
+					"name": "4.3 Download File",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/files/{{fileId}}/download",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "files", "{{fileId}}", "download"]
+						},
+						"description": "Скачать файл"
+					},
+					"response": []
+				},
+				{
+					"name": "4.4 Attach File to Advertisement",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/advertisements/{{advertisementId}}/files/{{fileId}}?order=1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "advertisements", "{{advertisementId}}", "files", "{{fileId}}"],
+							"query": [
+								{
+									"key": "order",
+									"value": "1",
+									"description": "Порядковый номер файла"
+								}
+							]
+						},
+						"description": "Прикрепить файл к объявлению"
+					},
+					"response": []
+				},
+				{
+					"name": "4.5 Delete File",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/files/{{fileId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "files", "{{fileId}}"]
+						},
+						"description": "Удалить файл"
+					},
+					"response": []
+				}
+			],
+			"description": "Работа с файлами (загрузка изображений)"
+		},
+		{
+			"name": "5. Users",
+			"item": [
+				{
+					"name": "5.1 Get Current User",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/users/me",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "users", "me"]
+						},
+						"description": "Получить информацию о текущем авторизованном пользователе"
+					},
+					"response": []
+				},
+				{
+					"name": "5.2 Get User by ID",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/users/{{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "users", "{{userId}}"]
+						},
+						"description": "Получить публичную информацию о пользователе"
+					},
+					"response": []
+				},
+				{
+					"name": "5.3 Update User Profile",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"displayName\": \"Иван Петрович Иванов\",\n  \"phoneNumber\": \"+79991234567\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/users/{{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "users", "{{userId}}"]
+						},
+						"description": "Обновить профиль пользователя (только свой)"
+					},
+					"response": []
+				}
+			],
+			"description": "Управление пользователями"
+		},
+		{
+			"name": "DEMO: Complete Scenario",
+			"item": [
+				{
+					"name": "Step 1: Register",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Registration successful', function() {",
+									"    pm.response.to.have.status(200);",
+									"    const response = pm.response.json();",
+									"    pm.collectionVariables.set('accessToken', response.accessToken);",
+									"    pm.collectionVariables.set('refreshToken', response.refreshToken);",
+									"    pm.collectionVariables.set('userId', response.user.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"displayName\": \"Demo User\",\n  \"email\": \"demo{{$timestamp}}@example.com\",\n  \"password\": \"DemoPassword123!\",\n  \"phoneNumber\": \"+79995551234\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/register",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "register"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Step 2: Create Category",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    pm.collectionVariables.set('categoryId', response.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Demo Category\",\n  \"parentId\": null\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/categories",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "categories"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Step 3: Create Advertisement",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    pm.collectionVariables.set('advertisementId', response.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Demo Product - {{$timestamp}}\",\n  \"description\": \"This is a demo advertisement created during presentation\",\n  \"price\": 15000,\n  \"categoryId\": \"{{categoryId}}\",\n  \"contact\": {\n    \"phoneNumber\": \"+79995551234\",\n    \"email\": \"demo@example.com\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/advertisements",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "advertisements"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Step 4: Publish Advertisement",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"Active\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/advertisements/{{advertisementId}}/status",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "advertisements", "{{advertisementId}}", "status"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Step 5: Search Advertisements",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/advertisements/search?query=Demo&page=1&pageSize=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "advertisements", "search"],
+							"query": [
+								{
+									"key": "query",
+									"value": "Demo"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "pageSize",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Полный сценарий для демонстрации (выполнить по порядку)"
+		}
+	]
+}

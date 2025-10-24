@@ -1,0 +1,101 @@
+﻿services:
+  # PostgreSQL database
+  postgres:
+    image: postgres:17
+    container_name: bulletinboard_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: bulletin_board
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"                 # Смените на 5433, если 5432 занят
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - bulletinboard-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d bulletin_board" ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  # Redis cache (опционально для гибридного кеша)
+  redis:
+    image: redis:7-alpine
+    container_name: bulletinboard_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - bulletinboard-network
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  # Database Migrator - запускается первым
+  db-migrator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: migrator
+    container_name: bulletinboard_db_migrator
+    environment:
+      DOTNET_ENVIRONMENT: Production
+      ConnectionStrings__MainDb: "Host=postgres;Port=5432;Database=bulletin_board;Username=postgres;Password=password"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - bulletinboard-network
+    restart: "no"
+
+  # ASP.NET Core API
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: api
+    container_name: bulletinboard_api
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__MainDb: "Host=postgres;Port=5432;Database=bulletin_board;Username=postgres;Password=password"
+      ConnectionStrings__Redis: "redis:6379"
+      Caching__EnableRedis: "true"
+      Jwt__Secret: "your-secret-key-minimum-32-characters-long-12345"
+      Jwt__Issuer: "bulletinboard.api"
+      Jwt__Audience: "bulletinboard.client"
+      Jwt__AccessTokenExpirationMinutes: "60"
+      Jwt__RefreshTokenExpirationDays: "30"
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      db-migrator:
+        condition: service_completed_successfully
+    volumes:
+      - ./uploads:/app/wwwroot/uploads
+      - ./logs:/app/logs
+    networks:
+      - bulletinboard-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  bulletinboard-network:
+    driver: bridge
+    
+    
+    
+

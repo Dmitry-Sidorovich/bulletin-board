@@ -5,7 +5,7 @@ using BulletinBoard.Domain.ValueObjects;
 namespace BulletinBoard.Domain.Entities;
 
 /// <summary>
-/// Объявление на электронной доске.
+/// Объявление.
 /// </summary>
 public class Advertisement : EntityBase
 {
@@ -43,7 +43,7 @@ public class Advertisement : EntityBase
     public AdStatus Status { get; private set; } = AdStatus.Draft;
 
     /// <summary>
-    /// Пустой конструктор для EF Core (материализация из БД).
+    /// Пустой конструктор для EF Core.
     /// </summary>
     private Advertisement() { }
 
@@ -135,6 +135,7 @@ public class Advertisement : EntityBase
         }
 
         Description = normalizedDescription;
+        UpdatedAt = DateTimeOffset.UtcNow;
     }
     
     /// <summary>
@@ -150,6 +151,7 @@ public class Advertisement : EntityBase
         }
 
         CategoryId = newCategoryId;
+        UpdatedAt = DateTimeOffset.UtcNow;
     }
 
     /// <summary>
@@ -158,13 +160,15 @@ public class Advertisement : EntityBase
     public void UpdateContact(Contact newContact)
     {
         Contact = newContact ?? throw new ArgumentNullException(nameof(newContact));
+        UpdatedAt = DateTimeOffset.UtcNow;
     }
     
     /// <summary>
-    /// Меняет статус (правила переходов добавим позже).
+    /// Меняет статус.
     /// </summary>
     public void ChangeStatus(AdStatus newStatus)
     {
         Status = newStatus;
+        UpdatedAt = DateTimeOffset.UtcNow;
     }
 }

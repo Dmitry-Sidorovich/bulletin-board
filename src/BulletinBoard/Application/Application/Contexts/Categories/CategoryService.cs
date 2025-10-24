@@ -68,6 +68,8 @@ public sealed class CategoryService : ICategoryService
         var category = new Category(name);
         await _categoryRepository.AddAsync(category, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+        
+        await _cacheService.RemoveAsync("categories:root", cancellationToken);
 
         return _mapper.Map<CategoryDto>(category);
     }

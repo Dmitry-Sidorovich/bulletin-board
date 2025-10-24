@@ -5,7 +5,7 @@ using BulletinBoard.Application.Contexts.Files.Services;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
-using DomainFile = BulletinBoard.Domain.Entities.File; // ✅ Alias для разрешения конфликта
+using DomainFile = BulletinBoard.Domain.Entities.File;
 
 namespace BulletinBoard.UnitTests.Application.Services;
 
@@ -189,7 +189,6 @@ public class FileServiceTests
         _mockFileRepository.Verify(r => r.DeleteAsync(It.IsAny<Guid>(), default), Times.Never);
     }
 
-    // 1. ТЕСТ: UploadAsync с null stream
     [Fact]
     public async Task UploadAsync_WithNullStream_ShouldThrowArgumentNullException()
     {
@@ -200,17 +199,23 @@ public class FileServiceTests
         await act.Should().ThrowAsync<ArgumentNullException>();
     }
 
-// 2. ТЕСТ: UploadAsync с пустым stream
     [Fact]
     public async Task UploadAsync_WithEmptyStream_ShouldThrowArgumentException()
     {
         // Arrange
-        var stream = new MemoryStream(); // Пустой stream
+        var stream = new MemoryStream();
+        var fileSize = 0L;
 
-        // Act & Assert - зависит от реализации
+        // Act & Assert
+        var act = async () => await _service.UploadAsync(stream, "test.jpg", "image/jpeg", fileSize);
+
+        await act.Should().ThrowAsync<ArgumentException>()
+            .WithParameterName("fileSize");
     }
 
-// 3. ТЕСТ: UploadAsync с огромным файлом (DoS защита)
+    /// <summary>
+    /// Проверяет защиту от DoS - загрузка файла размером больше максимально допустимого должна завершиться ошибкой.
+    /// </summary>
     [Fact]
     public async Task UploadAsync_WithHugeFile_ShouldThrowArgumentException()
     {
@@ -223,7 +228,7 @@ public class FileServiceTests
         // Act
         var act = async () => await _service.UploadAsync(stream, fileName, contentType, fileSize);
 
-        // Assert - если есть проверка максимального размера
+        // Assert
         await act.Should().ThrowAsync<ArgumentException>()
             .WithParameterName("fileSize");
     }

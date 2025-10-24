@@ -32,7 +32,7 @@ public class AuthServiceTests
         _mockUnitOfWork = new Mock<IUnitOfWork>();
         _mockConfiguration = new Mock<IConfiguration>();
 
-        var jwtOptions = Options.Create(new JwtOptions() // CHANGED
+        var jwtOptions = Options.Create(new JwtOptions
         {
             Issuer = "TestIssuer",
             Audience = "TestAudience",
@@ -40,24 +40,6 @@ public class AuthServiceTests
             AccessTokenExpirationMinutes = 60,
             RefreshTokenExpirationDays = 7
         });
-        // _mockConfiguration.Setup(c => c["Jwt:RefreshTokenExpirationDays"]).Returns("30");
-        // _mockConfiguration.Setup(c => c["Jwt:AccessTokenExpirationMinutes"]).Returns("15");
-
-        // _mockConfiguration.Setup(c => c["Jwt:RefreshTokenExpirationDays"])
-        //     .Returns("7");
-        // _mockConfiguration.Setup(c => c["Jwt:AccessTokenExpirationMinutes"])
-        //     .Returns("60");
-
-        // var config = new ConfigurationBuilder()
-        //     .AddInMemoryCollection(new Dictionary<string, string?>
-        //     {
-        //         ["Jwt:RefreshTokenExpirationDays"]     = "7",
-        //         ["Jwt:AccessTokenExpirationMinutes"]   = "60",
-        //         ["Jwt:Issuer"]   = "TestIssuer",
-        //         ["Jwt:Audience"] = "TestAudience",
-        //         ["Jwt:Secret"]   = "test-secret-min-32-chars-1234567890abcd"
-        //     })
-        //     .Build();
 
         _authService = new BulletinBoard.Infrastructure.Contexts.Auth.Services.AuthService(
             _mockUserRepository.Object,
@@ -65,7 +47,7 @@ public class AuthServiceTests
             _mockPasswordHasher.Object,
             _mockJwtTokenService.Object,
             _mockUnitOfWork.Object,
-            jwtOptions); // CHANGED
+            jwtOptions);
     }
 
     [Fact]
@@ -110,7 +92,7 @@ public class AuthServiceTests
         _mockUserRepository.Verify(r => r.AddAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Once);
         _mockRefreshTokenRepository.Verify(r => r.AddAsync(It.IsAny<RefreshToken>(), It.IsAny<CancellationToken>()),
             Times.Once);
-        _mockUnitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.AtLeast(2));
+        _mockUnitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -226,7 +208,7 @@ public class AuthServiceTests
 
         var user = new User("John Doe", "john@example.com", "hash123", null);
 
-        // фиксируем Id через reflection (EntityBase.Id protected set)
+        // Set UserId via reflection since Id is protected set
         var idProp = typeof(User).BaseType!.GetProperty("Id",
             System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
         idProp!.SetValue(user, userId);
@@ -247,15 +229,13 @@ public class AuthServiceTests
             .Setup(r => r.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
-        // репозиторий добавления нового refresh-токена
         _mockRefreshTokenRepository
             .Setup(r => r.AddAsync(It.IsAny<RefreshToken>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask); // OK для методов Task
+            .Returns(Task.CompletedTask);
 
-        // UoW всегда «сохраняет» что-то
         _mockUnitOfWork
             .Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(1); // Task<int>
+            .ReturnsAsync(1);
 
         _mockJwtTokenService
             .Setup(j => j.GenerateAccessToken(It.IsAny<User>()))
@@ -274,7 +254,7 @@ public class AuthServiceTests
         result.Should().NotBeNull();
         result.AccessToken.Should().Be(newAccessToken);
         result.RefreshToken.Should().Be(newRefreshToken);
-        result.ExpiresIn.Should().Be(60 * 60); // 60 минут * 60 сек
+        result.ExpiresIn.Should().Be(60 * 60);
 
         storedRefreshToken.IsRevoked.Should().BeTrue();
 
@@ -284,7 +264,7 @@ public class AuthServiceTests
 
         _mockUnitOfWork.Verify(
             u => u.SaveChangesAsync(It.IsAny<CancellationToken>()),
-            Times.Once()); // за revoke и за добавление нового refresh-токена
+            Times.Once());
     }
 
 
@@ -313,11 +293,9 @@ public class AuthServiceTests
         var expiredToken = "expired_token";
         var userId = Guid.NewGuid();
 
-        var validExpiresAt = DateTimeOffset.UtcNow.AddDays(7); // Создан с датой в будущем
-        var refreshToken = new RefreshToken(userId, expiredToken, validExpiresAt);
+        var refreshToken = new RefreshToken(userId, expiredToken, DateTimeOffset.UtcNow.AddDays(7));
 
-        // ✅ Симулируем, что время прошло (мокаем IsActive через приватное поле)
-        // Используем reflection для установки ExpiresAt в прошлое
+        // Set ExpiresAt to past date via reflection to simulate expiration
         var expiresAtProperty = typeof(RefreshToken).GetProperty("ExpiresAt");
         expiresAtProperty!.SetValue(refreshToken, DateTimeOffset.UtcNow.AddDays(-1));
 
@@ -373,7 +351,9 @@ public class AuthServiceTests
         _mockUnitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
-    // 1. ТЕСТ: Попытка использовать refresh token ДВАЖДЫ (replay attack)
+    /// <summary>
+    /// Проверяет защиту от replay-атак - попытка использовать отозванный refresh token должна завершиться ошибкой.
+    /// </summary>
     [Fact]
     public async Task RefreshTokenAsync_WithRevokedToken_ShouldThrowValidationException()
     {
@@ -381,7 +361,7 @@ public class AuthServiceTests
         var oldRefreshToken = "old_token";
         var userId = Guid.NewGuid();
         var storedRefreshToken = new RefreshToken(userId, oldRefreshToken, DateTimeOffset.UtcNow.AddDays(7));
-        storedRefreshToken.Revoke(); // ✅ Токен отозван
+        storedRefreshToken.Revoke();
 
         _mockRefreshTokenRepository
             .Setup(r => r.GetByTokenAsync(oldRefreshToken, It.IsAny<CancellationToken>()))
@@ -397,18 +377,26 @@ public class AuthServiceTests
             .WithMessage("*недействительный*");
     }
 
-    // 2. ТЕСТ: Регистрация с очень длинным DisplayName
+    /// <summary>
+    /// Проверяет, что RegisterAsync требует валидный email.
+    /// </summary>
     [Fact]
-    public async Task RegisterAsync_WithDisplayNameTooLong_ShouldThrowValidationException()
+    public async Task RegisterAsync_WithEmptyPassword_ShouldThrowArgumentException()
     {
         // Arrange
         var registerDto = new RegisterDto
         {
-            DisplayName = new string('A', 101), // Если есть ограничение MaxLength
+            DisplayName = "John Doe",
             Email = "test@example.com",
-            Password = "Password123"
+            Password = "" // Пустой пароль
         };
 
-        // Act & Assert - зависит от валидации
+        _mockUserRepository.Setup(r => r.GetByEmailAsync(registerDto.Email, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User?)null);
+
+        // Act & Assert
+        var act = async () => await _authService.RegisterAsync(registerDto, CancellationToken.None);
+
+        await act.Should().ThrowAsync<ArgumentException>();
     }
 }

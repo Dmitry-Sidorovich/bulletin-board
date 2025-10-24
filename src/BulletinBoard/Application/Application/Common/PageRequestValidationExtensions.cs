@@ -3,12 +3,12 @@
 namespace BulletinBoard.Application.Common;
 
 /// <summary>
-/// Расширения для валидации параметров постраничного вывода.
+/// Валидация параметров постраничного вывода.
 /// </summary>
 public static class PageRequestValidationExtensions
 {
     /// <summary>
-    /// Бросает исключение, если значения пагинации некорректны.
+    /// Проверяет значения параметров пагинации.
     /// </summary>
     /// <param name="page">Параметры пагинации.</param>
     /// <param name="maxPageSize">Необязательный верхний предел размера страницы.</param>

@@ -1,7 +1,7 @@
 ﻿namespace BulletinBoard.Application.Abstractions;
 
 /// <summary>
-/// Сервис для физического хранения файлов (абстракция над файловой системой/S3/Azure).
+/// Сервис для физического хранения файлов.
 /// </summary>
 public interface IFileStorageService
 {

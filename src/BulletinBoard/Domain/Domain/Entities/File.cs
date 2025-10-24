@@ -3,7 +3,7 @@
 namespace BulletinBoard.Domain.Entities;
 
 /// <summary>
-/// Файл в системе (изображение, документ).
+/// Файл (изображение, документ).
 /// Независимая сущность, может быть прикреплена к разным объектам.
 /// </summary>
 public class File : EntityBase
@@ -19,7 +19,7 @@ public class File : EntityBase
     public string FilePath { get; private set; } = string.Empty;
 
     /// <summary>
-    /// MIME-тип файла (например, "image/jpeg").
+    /// Тип файла (например, "image/jpeg").
     /// </summary>
     public string ContentType { get; private set; } = string.Empty;
 
@@ -38,7 +38,7 @@ public class File : EntityBase
     /// </summary>
     /// <param name="fileName">Оригинальное имя файла.</param>
     /// <param name="filePath">Относительный путь к файлу.</param>
-    /// <param name="contentType">MIME-тип.</param>
+    /// <param name="contentType">Тип файла.</param>
     /// <param name="fileSize">Размер в байтах.</param>
     public File(string fileName, string filePath, string contentType, long fileSize)
     {

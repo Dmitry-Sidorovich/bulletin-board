@@ -34,6 +34,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.env = .env
 		LICENSE = LICENSE
 		Dockerfile = Dockerfile
+		seed-data.sql = seed-data.sql
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BulletinBoard.Hosts.DbMigrator", "src\BulletinBoard\Hosts\BulletinBoard.Hosts.DbMigrator\BulletinBoard.Hosts.DbMigrator.csproj", "{65C5A314-3CE8-419C-BFE5-C9056495A1FE}"

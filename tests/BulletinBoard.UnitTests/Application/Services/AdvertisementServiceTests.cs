@@ -81,8 +81,8 @@ public class AdvertisementServiceTests
     public async Task CreateAsync_WithValidData_ShouldCreateAdvertisement()
     {
         // Arrange
-        var currentUserId = Guid.NewGuid(); // <-- 1. Определяем тестовый ID
-        _mockCurrentUserService.Setup(s => s.GetCurrentUserId()).Returns(currentUserId); // <-- 2. Настраиваем мок
+        var currentUserId = Guid.NewGuid();
+        _mockCurrentUserService.Setup(s => s.GetCurrentUserId()).Returns(currentUserId);
 
         var createDto = new CreateAdvertisementDto
         {
@@ -111,7 +111,7 @@ public class AdvertisementServiceTests
         _mockUnitOfWork.Verify(u => u.SaveChangesAsync(default), Times.Once);
 
         capturedAd.Should().NotBeNull();
-        capturedAd!.AuthorId.Should().Be(currentUserId); // <-- 3. Теперь эта проверка тоже будет работать
+        capturedAd!.AuthorId.Should().Be(currentUserId);
     }
 
     [Fact]
@@ -240,11 +240,14 @@ public class AdvertisementServiceTests
     {
         // Arrange
         var adId = Guid.NewGuid();
-        var existingAd = new Advertisement("Title", null, 100m, Guid.NewGuid(), Guid.NewGuid(),
+        var authorId = Guid.NewGuid();
+        var existingAd = new Advertisement("Title", null, 100m, Guid.NewGuid(), authorId,
             new Contact("John", "john@test.com"));
 
         _mockRepository.Setup(r => r.GetByIdAsync(adId, default))
             .ReturnsAsync(existingAd);
+        _mockCurrentUserService.Setup(s => s.IsOwnerOrAdmin(authorId))
+            .Returns(true);
 
         // Act
         var result = await _service.DeleteAsync(adId);
@@ -257,7 +260,7 @@ public class AdvertisementServiceTests
     }
 
     [Fact]
-    public async Task DeleteAsync_WhenNotExists_ShouldReturnFalse()
+    public async Task DeleteAsync_WhenNotExists_ShouldThrowNotFoundException()
     {
         // Arrange
         var adId = Guid.NewGuid();
@@ -265,10 +268,10 @@ public class AdvertisementServiceTests
             .ReturnsAsync((Advertisement?)null);
 
         // Act
-        var result = await _service.DeleteAsync(adId);
+        var act = async () => await _service.DeleteAsync(adId);
 
         // Assert
-        result.Should().BeFalse();
+        await act.Should().ThrowAsync<NotFoundException>();
         _mockRepository.Verify(r => r.DeleteAsync(It.IsAny<Guid>(), default), Times.Never);
     }
 
@@ -614,7 +617,6 @@ public class AdvertisementServiceTests
             Times.Once);
     }
 
-    // 1. ТЕСТ: ChangeStatusAsync когда объявления не существует
     [Fact]
     public async Task ChangeStatusAsync_WhenAdvertisementNotExists_ShouldThrowNotFoundException()
     {
@@ -624,8 +626,7 @@ public class AdvertisementServiceTests
 
         _mockRepository.Setup(r => r.GetByIdAsync(adId, default))
             .ReturnsAsync((Advertisement?)null);
-    
-        // ВАЖНО: Нам нужно настроить и ICurrentUserService, иначе он упадет раньше.
+
         _mockCurrentUserService.Setup(s => s.IsOwnerOrAdmin(It.IsAny<Guid>())).Returns(true);
 
         // Act
@@ -635,7 +636,6 @@ public class AdvertisementServiceTests
         await act.Should().ThrowAsync<NotFoundException>();
     }
 
-// 2. ТЕСТ: ChangeStatusAsync когда пользователь НЕ владелец
     [Fact]
     public async Task ChangeStatusAsync_AsNonOwner_ShouldThrowUnauthorizedAccessException()
     {
@@ -650,7 +650,7 @@ public class AdvertisementServiceTests
         _mockRepository.Setup(r => r.GetByIdAsync(adId, default))
             .ReturnsAsync(existingAd);
         _mockCurrentUserService.Setup(s => s.IsOwnerOrAdmin(authorId))
-            .Returns(false); // ✅ НЕ владелец
+            .Returns(false);
 
         // Act
         var act = async () => await _service.ChangeStatusAsync(adId, statusDto);
@@ -659,7 +659,6 @@ public class AdvertisementServiceTests
         await act.Should().ThrowAsync<UnauthorizedAccessException>();
     }
 
-// 3. ТЕСТ: UpdateAsync с null DTO
     [Fact]
     public async Task UpdateAsync_WithNullDto_ShouldThrowArgumentNullException()
     {
@@ -673,7 +672,6 @@ public class AdvertisementServiceTests
         await act.Should().ThrowAsync<ArgumentNullException>();
     }
 
-// 4. ТЕСТ: AttachFileAsync когда пользователь не владелец
     [Fact]
     public async Task AttachFileAsync_AsNonOwner_ShouldThrowUnauthorizedAccessException()
     {
@@ -689,7 +687,7 @@ public class AdvertisementServiceTests
         _mockRepository.Setup(r => r.GetByIdAsync(adId, default))
             .ReturnsAsync(existingAd);
         _mockCurrentUserService.Setup(s => s.IsOwnerOrAdmin(authorId))
-            .Returns(false); // ✅ НЕ владелец
+            .Returns(false);
 
         // Act
         var act = async () => await _service.AttachFileAsync(adId, fileId);

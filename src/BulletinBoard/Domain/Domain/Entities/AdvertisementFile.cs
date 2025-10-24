@@ -3,7 +3,7 @@
 namespace BulletinBoard.Domain.Entities;
 
 /// <summary>
-/// Связь между объявлением и файлом (junction table).
+/// Связь между объявлением и файлом (промежуточная таблица).
 /// Позволяет прикреплять несколько файлов к одному объявлению.
 /// </summary>
 public class AdvertisementFile : EntityBase

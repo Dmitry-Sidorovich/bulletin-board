@@ -85,7 +85,9 @@ public sealed class FileService : IFileService
     {
         var file = await _fileRepository.GetByIdAsync(fileId, cancellationToken);
         if (file == null)
+        {
             return null;
+        }
 
         return new FileInfoDto
         {
@@ -105,11 +107,15 @@ public sealed class FileService : IFileService
     {
         var file = await _fileRepository.GetByIdAsync(fileId, cancellationToken);
         if (file == null)
+        {
             return null;
+        }
 
         var stream = await _fileStorageService.ReadFileAsync(file.FilePath, cancellationToken);
         if (stream == null)
+        {
             return null;
+        }
 
         return (stream, file.FileName, file.ContentType);
     }
@@ -119,11 +125,15 @@ public sealed class FileService : IFileService
     {
         var file = await _fileRepository.GetByIdAsync(fileId, cancellationToken);
         if (file == null)
+        {
             return false;
+        }
+
+        await _fileRepository.DeleteAsync(fileId, cancellationToken);
+        
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         await _fileStorageService.DeleteFileAsync(file.FilePath, cancellationToken);
-        await _fileRepository.DeleteAsync(fileId, cancellationToken);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return true;
     }

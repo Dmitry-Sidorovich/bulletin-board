@@ -21,14 +21,14 @@ public class Category : EntityBase
     /// </summary>
     public Guid? ParentId { get; private set; }
     
-    /// <summary> Пустой конструктор, используемый EF Core при материализации из БД.</summary>
+    /// <summary> Пустой конструктор для EF Core.</summary>
     private Category() {}
     
     /// <summary>
     /// Создаёт категорию. Если <paramref name="parentId"/> = <c>null</c> — это корневая категория.
     /// </summary>
     /// <param name="name">Название категории.</param>
-    /// <param name="parentId">Идентификатор родителя (null для корня).</param>
+    /// <param name="parentId">Идентификатор родителя (null для корневой).</param>
     public Category(string name, Guid? parentId = null)
     {
         if (string.IsNullOrWhiteSpace(name))

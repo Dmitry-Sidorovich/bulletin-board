@@ -45,23 +45,6 @@ public sealed class UsersController : ControllerBase
         return dto is null ? NotFound() : Ok(dto);
     }
 
-    // /// <summary>
-    // /// Создаёт пользователя.
-    // /// </summary>
-    // /// <param name="request">Данные для создания пользователя.</param>
-    // /// <param name="cancellationToken">Токен отмены.</param>
-    // /// <returns>Созданный пользователь.</returns>
-    // [HttpPost]
-    // [Consumes("application/json")]
-    // [Produces("application/json")]
-    // [ProducesResponseType(typeof(UserDto), StatusCodes.Status201Created)]
-    // [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    // public async Task<ActionResult<UserDto>> Create([FromBody] CreateUserDto request, CancellationToken cancellationToken = default)
-    // {
-    //     var created = await _service.CreateAsync(request, cancellationToken);
-    //     return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
-    // }
-
     /// <summary>
     /// Обновляет данные пользователя.
     /// </summary>

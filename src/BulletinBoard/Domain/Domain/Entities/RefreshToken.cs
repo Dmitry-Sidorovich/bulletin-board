@@ -38,7 +38,7 @@ public class RefreshToken : EntityBase
     /// Создаёт новый refresh-токен.
     /// </summary>
     /// <param name="userId">Идентификатор пользователя.</param>
-    /// <param name="token">Токен (обычно GUID).</param>
+    /// <param name="token">Токен.</param>
     /// <param name="expiresAt">Дата истечения (обычно +30 дней от текущего момента).</param>
     public RefreshToken(Guid userId, string token, DateTimeOffset expiresAt)
     {
@@ -77,18 +77,4 @@ public class RefreshToken : EntityBase
         IsRevoked = true;
         RevokedAt = DateTimeOffset.UtcNow;
     }
-    
-    
-    // /// TEMP for tests
-    // ///
-    // /// 
-    // /// <summary>
-    // /// Проверяет, истёк ли токен.
-    // /// </summary>
-    // public bool IsExpired() => ExpiresAt <= DateTimeOffset.UtcNow;
-    //
-    // /// <summary>
-    // /// Проверяет, валиден ли токен (не истёк и не отозван).
-    // /// </summary>
-    // public bool IsValid() => !IsRevoked && !IsExpired();
 }

@@ -175,15 +175,11 @@ public sealed class AdvertisementService : IAdvertisementService
     /// <inheritdoc />
     public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var advertisement = await _advertisementRepository.GetByIdAsync(id, cancellationToken);
-        if (advertisement == null)
-        {
-            return false;
-        }
+        await GetAndValidateOwnershipAsync(id, "удаления", cancellationToken);
 
         await _advertisementRepository.DeleteAsync(id, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
-            
+
         await _cacheService.RemoveAsync($"ad:{id}", cancellationToken);
 
         return true;
@@ -218,11 +214,13 @@ public sealed class AdvertisementService : IAdvertisementService
     public async Task<bool> DetachFileAsync(Guid advertisementId, Guid fileId, CancellationToken cancellationToken = default)
     {
         await GetAndValidateOwnershipAsync(advertisementId, "открепления файлов от", cancellationToken);
-        
-        var deleted =  await _advertisementFileRepository.DeleteAsync(advertisementId, fileId, cancellationToken);
+
+        var deleted = await _advertisementFileRepository.DeleteAsync(advertisementId, fileId, cancellationToken);
 
         if (deleted)
         {
+            // Сохраняем удаление в БД перед инвалидацией кеша
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
             await _cacheService.RemoveAsync($"ad:{advertisementId}", cancellationToken);
         }
         return deleted;

@@ -136,8 +136,16 @@ finally
     Log.CloseAndFlush();
 }
 
-// ✅ Для интеграционных тестов
 namespace BulletinBoard.Hosts.Api
 {
-    public partial class Program { }
+    /// <summary>
+    /// Точка входа приложения BulletinBoard API.
+    /// </summary>
+    /// <remarks>
+    /// Это частичный класс (partial class) используется для интеграционных тестов.
+    /// Тесты могут ссылаться на тип Program через WebApplicationFactory для создания тестовых хостов.
+    /// </remarks>
+    public partial class Program
+    {
+    }
 }

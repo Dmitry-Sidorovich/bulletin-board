@@ -29,6 +29,24 @@ public interface IAdvertisementService
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Возвращает объявления пользователя с пагинацией.
+    /// </summary>
+    Task<PagedResult<AdvertisementDto>> GetByAuthorAsync(
+        Guid authorId, 
+        PageRequest page, 
+        CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Выполняет поиск объявлений с фильтрацией и сортировкой.
+    /// </summary>
+    /// <param name="filter">Параметры фильтрации и сортировки.</param>
+    /// <param name="cancellationToken">Токен отмены операции.</param>
+    /// <returns>Пагинированный результат объявлений.</returns>
+    Task<PagedResult<AdvertisementDto>> SearchAsync(
+        AdvertisementFilterDto filter,
+        CancellationToken cancellationToken = default);
+    
+    /// <summary>
     /// Создаёт новое объявление.
     /// </summary>
     /// <param name="dto">Данные для создания.</param>
@@ -87,22 +105,4 @@ public interface IAdvertisementService
     /// False, если привязка не найдена.
     /// </returns>
     Task<bool> DetachFileAsync(Guid advertisementId, Guid fileId, CancellationToken cancellationToken = default);
-    
-    /// <summary>
-    /// Возвращает объявления пользователя с пагинацией.
-    /// </summary>
-    Task<PagedResult<AdvertisementDto>> GetByAuthorAsync(
-        Guid authorId, 
-        PageRequest page, 
-        CancellationToken cancellationToken = default);
-    
-    /// <summary>
-    /// Выполняет поиск объявлений с фильтрацией и сортировкой.
-    /// </summary>
-    /// <param name="filter">Параметры фильтрации и сортировки.</param>
-    /// <param name="cancellationToken">Токен отмены операции.</param>
-    /// <returns>Пагинированный результат объявлений.</returns>
-    Task<PagedResult<AdvertisementDto>> SearchAsync(
-        AdvertisementFilterDto filter,
-        CancellationToken cancellationToken = default);
 }

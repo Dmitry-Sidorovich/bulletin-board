@@ -65,12 +65,13 @@ public sealed class CategoryReadRepository : ICategoryReadRepository
         };
     }
     
+    /// <inheritdoc />
     public async Task<CategoryDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await _dbContext.Categories
-            .AsNoTracking() // <-- Не забываем для операций чтения
+            .AsNoTracking()
             .Where(c => c.Id == id)
-            .ProjectTo<CategoryDto>(_mapper.ConfigurationProvider) // <-- Используем AutoMapper
+            .ProjectTo<CategoryDto>(_mapper.ConfigurationProvider)
             .FirstOrDefaultAsync(cancellationToken);
     }
 }

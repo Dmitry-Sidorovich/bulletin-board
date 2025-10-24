@@ -62,10 +62,13 @@ public sealed class AdvertisementFileRepository : IAdvertisementFileRepository
     /// <inheritdoc />
     public async Task<bool> DeleteAsync(Guid advertisementId, Guid fileId, CancellationToken cancellationToken = default)
     {
-        var deleted = await _context.AdvertisementFiles
-            .Where(af => af.AdvertisementId == advertisementId && af.FileId == fileId)
-            .ExecuteDeleteAsync(cancellationToken);
+        var entity = await _context.AdvertisementFiles
+            .FirstOrDefaultAsync(af => af.AdvertisementId == advertisementId && af.FileId == fileId, cancellationToken);
 
-        return deleted > 0;
+        if (entity == null)
+            return false;
+
+        _context.AdvertisementFiles.Remove(entity);
+        return true;
     }
 }

@@ -19,22 +19,19 @@ public static class AdvertisementPredicateBuilder
     {
         Expression<Func<Advertisement, bool>> predicate = ad => true;
 
-        // Поиск по тексту
         if (!string.IsNullOrWhiteSpace(filter.SearchQuery))
         {
             var query = filter.SearchQuery.ToLower();
-            predicate = predicate.And(ad => 
-                ad.Title.ToLower().Contains(query) || 
+            predicate = predicate.And(ad =>
+                ad.Title.ToLower().Contains(query) ||
                 ad.Description.ToLower().Contains(query));
         }
 
-        // Фильтр по категории
         if (filter.CategoryId.HasValue)
         {
             predicate = predicate.And(ad => ad.CategoryId == filter.CategoryId.Value);
         }
 
-        // Фильтр по цене
         if (filter.MinPrice.HasValue)
         {
             predicate = predicate.And(ad => ad.Price >= filter.MinPrice.Value);
@@ -45,7 +42,6 @@ public static class AdvertisementPredicateBuilder
             predicate = predicate.And(ad => ad.Price <= filter.MaxPrice.Value);
         }
 
-        // Фильтр по дате
         if (filter.CreatedFrom.HasValue)
         {
             predicate = predicate.And(ad => ad.CreatedAt >= filter.CreatedFrom.Value);
@@ -56,14 +52,12 @@ public static class AdvertisementPredicateBuilder
             predicate = predicate.And(ad => ad.CreatedAt <= filter.CreatedTo.Value);
         }
 
-        // Фильтр по статусу
         if (filter.Status.HasValue)
         {
             var domainStatus = filter.Status.Value.ToDomain();
             predicate = predicate.And(ad => ad.Status == domainStatus);
         }
 
-        // Фильтр по автору
         if (filter.AuthorId.HasValue)
         {
             predicate = predicate.And(ad => ad.AuthorId == filter.AuthorId.Value);
@@ -72,7 +66,18 @@ public static class AdvertisementPredicateBuilder
         return predicate;
     }
 
-    // Extension method для объединения предикатов
+    /// <summary>
+    /// Объединяет два выражения-предиката оператором AND на уровне Linq To Entities.
+    /// Используется для поэтапного построения сложных фильтров.
+    /// </summary>
+    /// <typeparam name="T">Тип сущности, для которой строится предикат.</typeparam>
+    /// <param name="left">Левый предикат.</param>
+    /// <param name="right">Правый предикат.</param>
+    /// <returns>Скомбинированный предикат (left AND right).</returns>
+    /// <remarks>
+    /// Использует Expression.Invoke для безопасного объединения предикатов в runtime.
+    /// Альтернатива прямому объединению через Expression.AndAlso для более сложных сценариев.
+    /// </remarks>
     private static Expression<Func<T, bool>> And<T>(
         this Expression<Func<T, bool>> left,
         Expression<Func<T, bool>> right)

@@ -4,7 +4,7 @@ using BulletinBoard.Domain.Enums;
 namespace BulletinBoard.Domain.Entities;
 
 /// <summary>
-/// Пользователь (продавец/автор объявлений).
+/// Пользователь (автор объявления).
 /// </summary>
 public class User : EntityBase
 {
@@ -76,7 +76,7 @@ public class User : EntityBase
     /// Новый телефон (опционально). Пустая/пробельная строка очистит телефон до <c>null</c>.
     /// </param>
     /// <exception cref="ArgumentException">
-    /// Бросается, если переданы пустые значения для обязательных полей.
+    /// Если переданы пустые значения для обязательных полей.
     /// </exception>
     public void UpdateUser(string? displayName = null, string? email = null, string? phone = null)
     {
@@ -98,6 +98,8 @@ public class User : EntityBase
         {
             Phone = string.IsNullOrWhiteSpace(phone) ? null : phone.Trim();
         }
+        
+        UpdatedAt = DateTimeOffset.UtcNow;
     }
     
     /// <summary>
